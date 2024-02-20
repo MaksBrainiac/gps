@@ -1,0 +1,414 @@
+.all {
+    /*border: 5px solid white; */
+}
+.dragover {
+
+}
+.dragel {
+    display: none;
+    border: 5px dashed greenyellow;
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100%;
+    z-index: 20000000;
+    pointer-events: none;
+}
+.dragover .dragel {
+    display: block;
+}
+.map {
+
+}
+
+.maptypes {
+    margin-bottom: 4px;
+}
+.btn-list {
+    margin-bottom: 4px;
+}
+.controls {
+    /*padding-left: 20px;*/
+}
+.contents {
+    width: 400px;
+    height: 690px;
+    overflow: auto;
+}
+.points {
+
+}
+.points .point{
+
+}
+.points .point a.del {
+    float: right;
+}
+.points a.link {
+    color: black;
+    /*text-decoration: underline;*/
+}
+.points .active a.link {
+    font-weight: bold;
+    text-decoration: none;
+}
+.tracks {
+
+}
+.tracks .track {
+    /*width: 400px;*/
+}
+.tracks .invis .link{
+    font-style: italic;
+    pointer-events: none;
+    cursor: default;
+}
+.tracks .locked .tline {
+    background-color: #e1e1e1;
+}
+.tracks .track a.visibility {
+    float: right;
+    margin-right: 2px;
+}
+.tracks .track a.lock {
+    float: right;
+    margin-right: 2px;
+}
+.tracks .track a.del {
+    float: right;
+}
+.tracks a.link {
+    color: black;
+    /*text-decoration: underline;*/
+}
+.tracks .active a.link {
+    font-weight: bold;
+    text-decoration: none;
+}
+.styles {
+    /*height: 18px;*/
+    padding: 4px 0px;
+}
+.iname {
+    padding-bottom: 5px;
+}
+.icons {
+
+}
+.icons .icon {
+    cursor: pointer;
+    display: inline-block;
+    width: 32px;
+    height: 40px;
+    margin: 1px;
+    vertical-align: middle;
+    text-align: center;
+}
+.icons .active {
+    /*margin: 0px;*/
+    border: 1px solid #4a5355;
+}
+.styles .colors {
+
+}
+.styles .opacities {
+    /*margin-left: 30px;*/
+}
+.styles .widths {
+    margin-left: 30px;
+}
+
+.color {
+    cursor: pointer;
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin: 1px;
+    vertical-align: middle;
+}
+.width {
+    cursor: pointer;
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #0F0F0F;
+    text-align: center;
+    margin: 1px;
+    font-size: 10px;
+    font-family: arial,serif;
+    vertical-align: middle;
+}
+.width.active {
+    background-color: black;
+    color: white;
+}
+.opacity {
+    /*background-color: black;*/
+    cursor: pointer;
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin: 1px;
+    vertical-align: middle;
+}
+.opacity-c {
+    background-color: black;
+    width: 100%;
+    height: 100%;
+}
+.opacity.active {
+    border: 1px solid black;
+}
+.track .color {
+    margin: 2px;
+    width: 20px;
+    height: 20px;
+    border: 1px solid #0F0F0F;
+    vertical-align: middle;
+}
+.route .color {
+    border-radius: 11px;
+}
+
+.mini-icon {
+    cursor: pointer;
+    margin: 2px;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    background-position: center bottom;
+    background-repeat: no-repeat;
+    vertical-align: middle;
+}
+#colorpickerHolder * {
+    box-sizing: content-box
+}
+.position {
+    font-style: italic;
+    font-size: 12px;
+}
+.position span.part {
+    display: inline-block;
+    width: 140px;
+}
+.position input {
+    width: 200px;
+    height: 16px;
+    font-size: 12px;
+    line-height: 12px;
+    padding: 2px;
+    margin: 2px 0 0;
+}
+.point-gps {
+    height: 16px;
+    font-size: 12px;
+    line-height: 12px;
+    padding: 2px;
+    margin: 0px;
+    width: 360px;
+}
+.point-part {
+    width: 150px;
+    height: 16px;
+    font-size: 12px;
+    line-height: 12px;
+    padding: 2px;
+    margin: 0px;
+}
+.point-positions {
+
+}
+.point-positions input {
+    vertical-align: middle;
+}
+.point-positions span {
+    vertical-align: middle;
+}
+
+body.dragging, body.dragging * {
+    cursor: move !important;
+}
+.dragged {
+    position: absolute;
+    opacity: 0.5;
+    z-index: 2000;
+}
+.tline {
+    vertical-align: bottom;
+    overflow: hidden;
+    width: 305px;
+    display: inline-block;
+    white-space: nowrap;
+    margin: 0;
+    padding: 0;
+}
+.pline {
+    vertical-align: bottom;
+    overflow: hidden;
+    width: 326px;
+    display: inline-block;
+    white-space: nowrap;
+    margin: 0;
+    padding: 0;
+}
+.placeholder {
+    position: relative;
+    height: 10px;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+.placeholder:before {
+    position: absolute;
+    content: "";
+    width: 5px;
+    margin-top: -5px;
+    height: 5px;
+    /*width: 5px;
+    height: 5px;
+    margin-top: -5px;
+    top: -4px;*/
+    border: 5px solid transparent;
+    border-left-color: red;
+    border-right: none;
+}
+
+#chartModal .modal-dialog {
+    width: 900px;
+}
+#myOpenModal .modal-dialog {
+    width: 800px;
+}
+#mySaveModal .modal-dialog {
+    width: 800px;
+}
+
+.loaderUI {
+    font-size: 18px;
+    font-weight: normal;
+}
+
+.fileList {
+    margin: 3px 0px;
+    height: 500px;
+    overflow: auto;
+    overflow-y: scroll;
+    padding-right: 3px;
+}
+.fileList div {
+    margin: 2px 0px;
+}
+.fileList div.trk:hover {
+    background: #f5f5f5;
+}
+.fileList div img {
+    margin-right: 5px;
+    width: 24px;
+    height: 24px;
+}
+.fileList div a.track {
+    color: black;
+}
+.fileList div a.dir {
+    font-weight: bold;
+}
+.fileList div a.del {
+    float: right;
+    margin-top: 4px;
+}
+.google .list {
+    background: url('/images/google-128.png') no-repeat;
+    background-position: 96% bottom;
+}
+.dropbox .list {
+    background: url('/images/dropbox-128.png') no-repeat;
+    background-position: 96% bottom;
+}
+
+#icons .popup {
+    background-color: #F9F9F9;
+    position: absolute;
+
+    -webkit-box-shadow: 1px 1px 3px 0px rgba(50, 50, 50, 0.75);
+    -moz-box-shadow:    1px 1px 3px 0px rgba(50, 50, 50, 0.75);
+    box-shadow:         1px 1px 3px 0px rgba(50, 50, 50, 0.75);
+}
+
+.map {
+    width: 100%; /*1000px;*/
+    height: 800px;
+    background-color: #9bc0ff;
+}
+
+.map:-webkit-full-screen {
+    width:100%;
+    height:100%;
+}
+.map:-moz-full-screen {
+    width:100%;
+    height:100%;
+}
+.map:-ms-fullscreen {
+    width:100%;
+    height:100%;
+}
+.map:fullscreen {
+    width:100%;
+    height:100%;
+}
+
+.fileInfo {
+    margin-bottom: 8px;
+    width: 1000px;
+    font-weight: bold;
+}
+.fileInfo img {
+    width: 16px;
+    height: 16px;
+}
+.navbar {
+    margin-bottom: 1px;
+}
+#panel {
+    padding-top: 4px;
+    /*padding-left: 20px;*/
+}
+.filters input {
+    margin: 0px;
+    width: 300px;
+}
+.file-services {
+    margin: -15px -15px 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.map-panel {
+    margin-right: 440px;
+}
+.right-panel {
+    float: right;
+    width: 420px;
+    padding-right: 20px;
+}
+.limited1400 {
+    max-width: 1440px;
+}
+.label-inverse {
+    background-color: black;
+}
+.btn-inverse {
+    background-color: black;
+    color: white;
+}
+.btn-inverse:hover {
+    color: white;
+}
+#myModal .modal-dialog {
+    margin-top: 100px
+}
+.btn-sat {
+    border-bottom: 2px solid green;
+}
+.btn-heat {
+    border-bottom: 2px solid red;
+}

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>GPS Travel Maker (Loading…)</title>
+</head>
+<body>
+    <script type="text/javascript">
+        let isAccepted = false;
+        let idx = null;
+        let idt = null;
+
+        function processDoc(doc)
+        {
+            idx = (new Date()).getTime();
+
+            // Try addTrack to editor:
+            channel.postMessage({
+                action: "add",
+                doc: doc,
+                id: idx
+            });
+            idt = setTimeout(function () {
+                if (!isAccepted) {
+                    window.opener.postMessage({
+                        event: "timeout"
+                    }, "*");
+                    // Load track in window:
+                    // channel.postMessage({
+                    //     action: "load",
+                    //     doc: doc,
+                    //     id: idx
+                    // });
+                    localStorage.setItem("activeBin", doc);
+                    window.location.href = "/#new";
+                }
+            }, 1000);
+        }
+
+        const channel = new BroadcastChannel("gpxChannel");
+        channel.addEventListener("message", function (event) {
+            console.info("BC-window", event.data);
+            switch (event.data.action) {
+                case "load":
+                    localStorage.setItem("activeBin", event.data.doc);
+                    window.location.href = "/#new";
+                    break;
+            }
+
+            switch (event.data.event) {
+                case "ok":
+                    if (event.data.id === idx) {
+                        isAccepted = true;
+                        window.opener.postMessage({event: "ok"}, "*");
+                        clearTimeout(idt);
+                    }
+                    break;
+            }
+        });
+        window.addEventListener("message", function (event) {
+            console.info("wm-window", event.data);
+            switch (event.data.action) {
+                case "process":
+                    processDoc(event.data.doc);
+                    break;
+            }
+        });
+
+        channel.postMessage({
+            event: "windowReady"
+        });
+        if (window.opener) {
+            window.opener.postMessage({
+                event: "windowReady"
+            }, "*");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>GPS Travel Maker (Frame)</title>
+</head>
+<body>
+    <script type="text/javascript">
+        let isAccepted = false;
+        let idx = null;
+        let idt = null;
+
+        function processDoc(doc)
+        {
+            idx = (new Date()).getTime();
+
+            // Try addTrack to editor:
+            channel.postMessage({
+                action: "add",
+                doc: doc,
+                id: idx
+            });
+            idt = setTimeout(function () {
+                if (!isAccepted) {
+                    window.parent.postMessage({
+                        event: "timeout"
+                    }, "*");
+                    // Load track in window:
+                    channel.postMessage({
+                        action: "load",
+                        doc: doc,
+                        id: idx
+                    });
+                }
+            }, 1000);
+        }
+
+        const channel = new BroadcastChannel("gpxChannel");
+        channel.addEventListener("message", function (event) {
+            console.info("BC-frame", event.data);
+            switch (event.data.event) {
+                case "windowReady":
+                    window.parent.postMessage({event: "windowReady"}, "*");
+                    break;
+
+                case "ok":
+                    if (event.data.id === idx) {
+                        isAccepted = true;
+                        window.parent.postMessage({event: "ok"}, "*");
+                        clearTimeout(idt);
+                    }
+                    break;
+            }
+        });
+
+        window.addEventListener("message", function (event) {
+            console.info("wm-frame", event.data);
+
+            let origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
+            // if (origin !== /*the container's domain url*/)
+            //     return;
+
+            switch (event.data.action)
+            {
+                case "process":
+                    processDoc(event.data.doc);
+                    break;
+            }
+        }, false);
+    </script>
+</body>
+</html>
