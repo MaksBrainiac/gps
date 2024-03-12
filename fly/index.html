@@ -93,7 +93,7 @@
     <script src="js/gif.js"></script>
     <script type="text/javascript">
         const GP = {};
-        const base = "/fly/";
+        const base = "/fly";
 
         const MAX_FRAMES = 150;
         const GIFW = 384 + 32;
@@ -224,7 +224,7 @@
             for (let i = 0; i < GP.lines.length; i++) {
                 ids.push(GP.lines[i].id);
             }
-            history.replaceState({}, "", base + (GP.lines.length > 0 ? '?date=' + GP.lines[0].date + '&ids=' + ids.join(",") : ""));
+            history.replaceState({}, "", base + '/' + (GP.lines.length > 0 ? '?date=' + GP.lines[0].date + '&ids=' + ids.join(",") : ""));
             document.title = "GPS Strava Flyby" + (GP.lines.length > 0 ? " (" + GP.lines.length + ")" : "");
         };
 
@@ -936,7 +936,7 @@
                 quality: 10,
                 width: GP.sizeW,
                 height: GP.sizeH,
-                workerScript: "/gps-strava-flyby/js/gif.worker.js"
+                workerScript: base + "/js/gif.worker.js"
             });
             GP.gif.on('finished', function(blob) {
                 //GP.captureStream.getTracks().forEach(track => track.stop());
