@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>GPS Strava Flyby</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.css"/>
+    <link rel="stylesheet" href="css/main.css?v=1710083287">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R8N4KV1R7C"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-R8N4KV1R7C');
+    </script>
+</head>
+<body style="overflow: hidden">
+    <div id="map">
+
+    </div>
+    <div id="frame-wrapper" class="pe-none" style="
+        height: calc(100% - 200px);
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1000000;
+        /*background-color: rgba(255,0,0,0.28);*/
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    ">
+        <div id="frame" style="
+            border: 1px solid black;
+            /*position: absolute;*/
+            /*z-index: 1000000;*/
+            cursor: pointer;
+            width: 400px;
+            height: 200px;
+            position: relative;
+            display: none;
+        ">
+            <div id="frame-timer" style="position: absolute; bottom: calc(100% + 1px);">0.00</div>
+            <div id="frame-now">12:00:00</div>
+            <div id="frame-controls" style="position: absolute; left: 100%; top: 0">
+                <div><a href="#" id="rec-close">❌</a></div>
+                <div><a href="#" id="rec-start">▶️</a></div>
+                <div><a href="#" id="rec-stop" style="display: none">⏹</a></div>
+                <div><a href="#" id="rec-inc">➕</a></div>
+                <div><a href="#" id="rec-dec">➖</a></div>
+            </div>
+        </div>
+    </div>
+    <div id="timer">
+        <div class="position"></div>
+        <div class="total"></div>
+    </div>
+    <div id="controls">
+        <a href="#" id="play-start">▶️</a>
+        <a href="#" id="play-stop" style="display: none">⏹</a>
+        <a href="#" id="play-slower">⏪</a>
+        <a href="#" id="play-faster">⏩</a>
+        <span class="position"></span> / <span class="total"></span>
+        (( <span class="speed"></span> ))
+        <span class="zoom"></span>
+
+        <a href="#" id="record-gif">💾</a>
+    </div>
+    <div id="timeline">
+        <div id="start"></div>
+        <div id="end"></div>
+        <canvas id="myChart"></canvas>
+    </div>
+    <div id="list">
+        <div class="tracks">
+
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment-with-locales.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.2.1/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-loading-overlay/2.1.7/loadingoverlay.min.js"></script>
+    <script src="js/gif.js"></script>
+    <script type="text/javascript">
+        const GP = {};
+        const base = "/fly/";
+
+        const MAX_FRAMES = 150;
+        const GIFW = 384 + 32;
+        const GIFH = 216 + 18;
+
+        GP.lines = [];
+        GP._map = null;
+        GP.index = 0;
+        GP.playing = false;
+        GP.playSpeed = 10;
+        GP.interval = null;
+        GP.timeZoom = 1;
+        GP.offset = 0;
+        GP.hoverEnabled = true;
+        GP.captureMode = false;
+        GP.saveMode = false;
+
+        const COLORS = [
+            "#00000077",
+            "#FF000077",
+            "#0000FF77",
+            "#00800077",
+            "#FFFF0077"
+        ];
+
+        GP.navComplete = false;
+        GP.askPosition = function(){
+            try {
+                console.log("ASK USER LOCATION!");
+                GP.navTiid = setTimeout(GP.geoNavCancel, 5000);
+                navigator.geolocation.getCurrentPosition(GP.geoNavComplete, GP.geoNavCancel, GP.geoNavError);
+            } catch (err) {
+                console.error("GP.askPosition", err);
+                // GP.defaultPosition();
+            }
+        };
+
+        GP.geoNavComplete = function(location) {
+            GP.navComplete = true;
+            if (GP.navComplete) {
+                GP.lat = location.coords.latitude;
+                GP.lng = location.coords.longitude;
+                GP._map.panTo(new L.LatLng(location.coords.latitude, location.coords.longitude));
+            } else {
+                GP.setStartPoint(location.coords.latitude, location.coords.longitude);
+                if (!GP._map)
+                    GP.initialize();
+            }
+        };
+        GP.geoNavError = function(err) {
+            console.log("GP.geoNavError", err);
+            GP.defaultPosition();
+        };
+        GP.geoNavCancel = function() {
+            console.log("GP.geoNavCancel");
+            // GP.defaultPosition();
+        };
+        GP.setStartPoint = function(lat, lng) {
+            GP.lat = lat;
+            GP.lng = lng;
+        };
+        GP.defaultPosition = function() {
+            if (GP._map)
+                return;
+
+            // if (location.protocol === "https:") {
+                GP.navComplete = true;
+                GP.setStartPoint(50, 36.2302);
+                if (!GP._map)
+                    GP.initialize();
+            // }
+        };
+
+        GP.initialize = function() {
+            GP._map = L.map('map').setView([GP.lat, GP.lng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(GP._map);
+
+            if (GP.ready != null)
+                GP.ready();
+        };
+
+        GP.addLine = function(obj) {
+            // if (!$('#link a').is(':visible')) {
+            //     $('#link a').attr('href', obj['link']).show();
+            // }
+
+            // console.log(obj);
+            for (let i = 0; i < GP.lines.length; i++) {
+                if (GP.lines[i].id === obj.id) {
+                    return false; // Duplicate!
+                }
+            }
+
+            if (GP.start) {
+                if (obj.tracks[0].points[0].t > GP.end ||
+                    obj.tracks[0].points[obj.tracks[0].points.length - 1].t < GP.start) {
+                    alert("Tracks do not have common segments!");
+                    return false;
+                }
+            }
+
+            let item = {
+                id: obj.id,
+                date: obj.date,
+                title: obj.title,
+                user: obj.user,
+                avatar: obj.avatar,
+                points: obj.tracks[0].points
+            };
+
+            GP.lines.push(item);
+            GP.renderLine(item);
+
+            GP.renderList();
+            GP.renderTimeline();
+
+            // GP.setTimePosition(GP.start + (GP.end - GP.start) / 2);
+            GP.setTimePosition(GP.start);
+
+            GP.index++;
+            GP.updateURL();
+        };
+
+        GP.updateURL = function () {
+            let ids = [];
+            for (let i = 0; i < GP.lines.length; i++) {
+                ids.push(GP.lines[i].id);
+            }
+            history.replaceState({}, "", base + (GP.lines.length > 0 ? '?date=' + GP.lines[0].date + '&ids=' + ids.join(",") : ""));
+            document.title = "GPS Strava Flyby" + (GP.lines.length > 0 ? " (" + GP.lines.length + ")" : "");
+        };
+
+        GP.play = function() {
+            if (GP.playing)
+                return;
+
+            if (GP.timePosition < GP.start)
+                GP.setTimePosition(GP.start);
+
+            GP.startPosition = GP.timePosition;
+            GP.startDateTime = new Date();
+
+            GP.playing = true;
+            GP.interval = setInterval(GP.nextPlay, 50);
+            $("#play-start").hide();
+            $("#play-stop").show();
+        };
+
+        GP.nextPlay = function() {
+            if (!GP.saveMode && GP.captureMode) {
+                let time = ((new Date()).getTime() - GP.startDateTime.getTime())/1000;
+                $('#frame-timer').text(time.toFixed(2));
+            }
+
+            GP.setTimePosition(GP.timePosition + GP.playSpeed);
+            if (GP.timePosition >= GP.end) {
+                GP.stop();
+            }
+        };
+
+        GP.stop = function() {
+            if (!GP.playing)
+                return;
+            GP.playing = false;
+            clearInterval(GP.interval);
+            GP.interval = null;
+            $("#play-start").show();
+            $("#play-stop").hide();
+            if (GP.captureMode)
+                GP.setTimePosition(GP.startPosition);
+        };
+
+        GP.removeLine = function(index) {
+            GP.lines[index].polyline.remove(); // ???
+            GP.lines[index].userMarker.remove(); // ???
+            GP.lines.splice(index, 1);
+
+            GP.renderList();
+            GP.renderTimeline();
+            GP.updateURL();
+        };
+
+        GP.renderList = function() {
+            $(".tracks").empty();
+            for (let i = 0; i < GP.lines.length; i++) {
+                let $line = $("<div></div>");
+                $line.addClass("track color" + i % COLORS.length);
+                let img = $("<img/>");
+                $line.append(img)
+                $(".tracks").append($line);
+                img.attr('alt', GP.lines[i].user);
+                img.attr('src', GP.lines[i].avatar);
+                let span = $("<a></a>");
+                span.text(GP.lines[i].user);
+                span.attr("target", "_blank");
+                span.addClass("link");
+                span.attr("href", "https://www.strava.com/activities/" + GP.lines[i].id);
+                $line.append(span);
+                let aDel = $("<a class=\"del\">❌</a>");
+                aDel.on("click", (function(j){ return function($event){
+                    GP.removeLine(j);
+                }})(i));
+                $line.append(aDel);
+            }
+        };
+
+        GP.renderTimeline = function(){
+            let startList = [];
+            let endList = [];
+            for (let i = 0; i < GP.lines.length; i++) {
+                startList.push(GP.lines[i].points[0].t);
+                endList.push(GP.lines[i].points[GP.lines[i].points.length - 1].t);
+            }
+            GP.start = Math.min(...startList);
+            GP.end = Math.max(...endList);
+            GP.width = GP.end - GP.start;
+            GP.offset = GP.start;
+
+            $("#start").text(moment.unix(GP.start).local().format('HH:mm'));
+            $("#end").text(moment.unix(GP.end).local().format('HH:mm'));
+
+            // console.info(
+            //     moment.unix(GP.start).local().format('YYYY-MM-DD HH:mm:ss'),
+            //     moment.unix(GP.end).local().format('YYYY-MM-DD HH:mm:ss')
+            // );
+
+            let datasets = [];
+            for (let i = 0; i < GP.lines.length; i++) {
+                let points = [];
+                let sx = 0;
+
+                for (let j = 0; j < GP.lines[i].points.length; j++) {
+
+                    let avg = function(g, interval) {
+                        for (let k = g; k >= 0; k--) {
+                            if (g === 0 || (GP.lines[i].points[g].t - GP.lines[i].points[k].t > interval)) {
+                                let v = GP._map.distance(
+                                    L.latLng(GP.lines[i].points[g].x, GP.lines[i].points[g].y),
+                                    L.latLng(GP.lines[i].points[k].x, GP.lines[i].points[k].y)
+                                ) / (GP.lines[i].points[g].t - GP.lines[i].points[k].t);
+                                return v;
+                            }
+                        }
+                        return 0;
+                    };
+
+                    // let v = avg(j, 60);
+                    // if (j > 0) {
+                    //     v = GP._map.distance(
+                    //         L.latLng(GP.lines[i].points[j].x, GP.lines[i].points[j].y),
+                    //         L.latLng(GP.lines[i].points[j - 1].x, GP.lines[i].points[j - 1].y)
+                    //     ) / (GP.lines[i].points[j].t - GP.lines[i].points[j - 1].t);
+                    // }
+                    // TODO: avg speed during some seconds??
+
+                    if (GP.lines[i].points[j].t - sx >= 10
+                        || j === GP.lines[i].points.length - 1
+                        || j === 0) {
+                        sx = GP.lines[i].points[j].t;
+                        points.push({
+                            x: GP.lines[i].points[j].t * 1000,
+                            y: GP.lines[i].points[j].z
+                            // y: v
+                        });
+                    }
+                }
+
+                datasets.push({
+                    label: GP.lines[i].title,
+                    backgroundColor: COLORS[i % 3].replace('77', '16'),
+                    borderColor: COLORS[i % 3],
+                    fill: true,
+                    lineTension: 0,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    data: points
+                });
+            }
+
+            const data = {
+                // labels: [ // Date Objects
+                // ],
+                datasets: datasets
+            };
+            const config = {
+                type: 'line',
+                data: data,
+                options: {
+                    elements: {
+                        line: {
+                            tension: 0
+                        }
+                    },
+                    animation: {
+                        duration: 0 // general animation time
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: "nearest",
+                        axis: "x"
+                    },
+                    events: ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove', 'wheel'],
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            text: '---',
+                            display: false
+                        },
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            enabled: false
+                        },
+                        myPP: {
+                            color: "black"
+                        }
+                    },
+                    scales: {
+                        x: {
+                            // min: moment(GP.start * 1000).startOf('hour').valueOf(),
+                            // max: moment(GP.end * 1000).startOf('hour').add(1, 'hours').valueOf(),
+                            min: GP.start * 1000,
+                            max: GP.end * 1000,
+                            type: 'time',
+                            ticks: {
+                                maxRotation: 0,
+                                major: {
+                                    enabled: true
+                                },
+                                // stepSize: 0.25,
+                            },
+                            time: {
+                                tooltipFormat: 'HH:mm',
+                                // unit: 'minute',
+                                displayFormats: {
+                                    'millisecond': 'HH:mm',
+                                    'second': 'HH:mm',
+                                    'minute': 'HH:mm',
+                                    'hour': 'HH:mm',
+                                    'day': 'HH:mm',
+                                    'week': 'HH:mm',
+                                    'month': 'HH:mm',
+                                    'quarter': 'HH:mm',
+                                    'year': 'HH:mm'
+                                }
+                            },
+                            title: {
+                                display: false,
+                                displayFormats: 'HH:mm',
+                                text: 'Time'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Height'
+                            }
+                        }
+                    },
+                },
+                plugins: [{
+                    id: "myPP",
+                    afterEvent: function(chart, args, options) {
+                        const event = args.event;
+                        if (event.type === 'wheel') {
+                            console.log(event.type, event);
+                            let factor = event.native.deltaY < 0 ? 1 : -1;
+                            setTimeout(function() {
+                                GP.changeTimeScale(factor);
+                            }, 20);
+                        }
+                    },
+                    beforeEvent: function(chart, args, options) {
+                        const event = args.event;
+                        if (GP.playing) {
+                            if (event.type === 'click') {
+                                let val = chart.scales["x"].getValueForPixel(event.x);
+                                GP.setTimePosition(val/1000);
+                            }
+                            return;
+                        }
+                        if (event.type === 'click') {
+                            GP.hoverEnabled = !GP.hoverEnabled;
+                            return;
+                        }
+                        if (event.type === 'mousemove') {
+                            if (GP.hoverEnabled) {
+                                let val = chart.scales["x"].getValueForPixel(event.x);
+                                GP.setTimePosition(val/1000);
+                            }
+                        }
+                    },
+                    beforeDraw: function (chart, args, options) {
+                        // console.info("draw!");
+                        var ctx = chart.ctx;
+                        var chartArea = chart.chartArea;
+                        //
+
+                        let pix = chart.scales["x"].getPixelForValue(GP.timePosition * 1000);
+                        if (!isNaN(pix)) {
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.strokeStyle = options.color;
+                            ctx.lineWidth = 1
+                            ctx.moveTo(pix, chartArea.bottom);
+                            ctx.lineTo(pix, chartArea.top);
+                            ctx.stroke();
+                            ctx.restore();
+                        }
+                    }
+                }]
+            };
+
+            const ctx = document.getElementById('myChart');
+
+            if (GP.chart) {
+                GP.chart.destroy();
+            }
+            GP.chart = new Chart(ctx, config);
+        };
+
+        GP.tx = 0;
+        GP.changeTimeScale = function(factor) {
+            let t1 = (new Date()).getTime();
+            if (t1 - GP.tx < 1000)
+                return;
+            GP.tx = t1;
+
+            console.warn('zz', factor);
+            if (factor < 0 && GP.timeZoom === 1)
+                return;
+
+            let newZoom = Math.max(1, factor > 0 ? GP.timeZoom * 2 : GP.timeZoom / 2);
+
+            // 10:00 - 20:00
+            // -- 12:00 --
+            // 5:00 GW/tz
+            // 11:00 - 12:00 - 16:00 //// GP.tp - (GP.tp - GP.s) / GP.w * GP.w * z2
+            // +1                    ////
+            // 2.5H GW/tz
+            // offset
+            GP.offset = GP.timePosition - (GP.timePosition - GP.offset) * GP.timeZoom / newZoom;
+
+            GP.timeZoom = newZoom;
+
+            GP.offset = Math.max(GP.offset, GP.start);
+            GP.offset = Math.min(GP.offset, GP.end - GP.width / GP.timeZoom);
+
+            // let t0 = GP.timePosition - GP.start - GP.offset;
+            // GP.offset -= t0 / GP.timeZoom - t0 / newZoom;
+            // console.info(GP.offset);
+
+
+            // GP.start + GP.offset
+            // GP.start + GP.width / GP.timeZoom;
+
+            GP.chart.options.scales["x"].min = 1000 * (GP.offset);
+            GP.chart.options.scales["x"].max = 1000 * (GP.offset + GP.width / GP.timeZoom);
+            GP.chart.update();
+            console.info('upd!');
+        };
+        GP.changeTimeScaleTh = L.Util.throttle(GP.changeTimeScale, 1000, window);
+
+        GP.renderLine = function(obj){
+            var latlngs = [];
+            for (let i = 0; i < obj.points.length; i++) {
+                latlngs.push([
+                    obj.points[i].x,
+                    obj.points[i].y,
+                ]);
+            }
+
+            obj.polyline = L.polyline(latlngs, {
+                color: COLORS[GP.index % COLORS.length],
+                weight: 5
+            }).addTo(GP._map);
+
+            var avatarIcon = L.icon({
+                iconUrl: obj.avatar,
+                //shadowUrl: 'leaf-shadow.png',
+
+                iconSize:     [32, 32], // size of the icon
+                //shadowSize:   [50, 64], // size of the shadow
+                iconAnchor:   [16, 16], // point of the icon which will correspond to marker's location
+                //shadowAnchor: [4, 62],  // the same for the shadow
+                //popupAnchor:  [-3, -76] // point from which the popup should open relative to the iconAnchor
+                className: "rounded color" + GP.index % COLORS.length
+            });
+
+            obj.userMarker = L.marker([obj.points[0].x, obj.points[0].y], {icon: avatarIcon}).addTo(GP._map);
+            obj.icon = avatarIcon
+        };
+
+        GP.timePosition = null;
+        GP.startPosition = null;
+        GP.startDateTime = null;
+        GP.setTimePosition = function(t){
+            GP.timePosition = t;
+            $("#timer .position, #controls .position").html(
+                moment.unix(t).local().format('HH:mm')
+            );
+            $("#frame-now").html(
+                moment.unix(t).local().format('HH:mm:ss')
+            );
+
+            $("#timer .total, #controls .total").html(
+                "[" + Math.floor((GP.end - GP.start) / 3600) + ':' + String(Math.round((GP.end - GP.start) % 3600 / 60)).padStart(2, "0") + "]"
+            );
+
+            // console.info(
+            //     moment.unix(t).local().format('YYYY-MM-DD HH:mm:ss')
+            // );
+
+            for (let i = 0; i < GP.lines.length; i++) {
+                let position = GP.getRiderPositionAt(i, t);
+                // console.warn(position);
+                GP.lines[i].userMarker.setLatLng(position);
+                let icon = GP.lines[i].userMarker.getIcon();
+                if (GP.timePosition < GP.lines[i].points[0].t ||
+                    GP.timePosition > GP.lines[i].points[GP.lines[i].points.length - 1].t) {
+                    if (icon.options.className.indexOf(" disabled") < 0) {
+                        icon.options.className = icon.options.className + " disabled";
+                        GP.lines[i].userMarker.setIcon(icon);
+                    }
+                } else {
+                    if (icon.options.className.indexOf(" disabled") >= 0) {
+                    icon.options.className = icon.options.className.replace(" disabled", "");
+                        GP.lines[i].userMarker.setIcon(icon);
+                    }
+                }
+            }
+            GP.chart.render();
+        };
+
+        GP.getRiderPositionAt = function(i, t){
+            if (t <= GP.lines[i].points[0].t) {
+                return [+GP.lines[i].points[0].x, +GP.lines[i].points[0].y];
+            }
+
+            let total = GP.lines[i].points.length;
+            if (t >= GP.lines[i].points[total - 1].t) {
+                return [+GP.lines[i].points[total - 1].x, +GP.lines[i].points[total - 1].y];
+            }
+
+            for (let j = 0; j < GP.lines[i].points.length - 2; j++) {
+                if (t >= GP.lines[i].points[j].t && t < GP.lines[i].points[j + 1].t) {
+                    // console.error(
+                    //     moment.unix(t).local().format('YYYY-MM-DD HH:mm:ss'),
+                    //     moment.unix(GP.lines[i].points[j].t).local().format('YYYY-MM-DD HH:mm:ss')
+                    // );
+
+                    var tt = GP.lines[i].points[j + 1].t - GP.lines[i].points[j].t;
+                    var t1 = t - GP.lines[i].points[j].t;
+                    // console.error(tt, t1);
+                    var xx = GP.lines[i].points[j + 1].x - GP.lines[i].points[j].x;
+                    var yy = GP.lines[i].points[j + 1].y - GP.lines[i].points[j].y;
+                    return [
+                        +GP.lines[i].points[j].x + (tt > 0 ? xx * t1/tt : 0),
+                        +GP.lines[i].points[j].y + (tt > 0 ? yy * t1/tt : 0),
+                    ];
+                }
+            }
+        };
+
+        const channel = new BroadcastChannel("gpxChannel");
+        channel.addEventListener("message", function(event) {
+            console.info("BC-main-fly!", event.data);
+            switch (event.data.action) {
+                case "fly":
+                    let flyDoc = JSON.parse(event.data.doc);
+                    GP.addLine(flyDoc);
+
+                    channel.postMessage({
+                        event: "ok",
+                        id: event.data.id
+                    });
+                    break;
+
+                case "doc":
+                    let dec = JSON.parse(event.data.doc);
+                    GP.addLine(dec);
+
+                    channel.postMessage({
+                        event: "ok",
+                        id: event.data.id
+                    });
+                    break;
+            }
+        });
+
+        let skx = [
+            2.5, 5, 10, 15, 30, 60
+        ];
+
+        GP.goFaster = function () {
+            let k = skx.indexOf(GP.playSpeed);
+            if (k < skx.length - 1)
+                k++;
+            GP.playSpeed = skx[k];
+            GP.displaySpeed();
+        };
+        GP.goSlower = function () {
+            let k = skx.indexOf(GP.playSpeed);
+            if (k > 0)
+                k--;
+            GP.playSpeed = skx[k];
+            GP.displaySpeed();
+        };
+
+        GP.displaySpeed = function () {
+            $('#controls .speed').text(
+                (GP.playSpeed * 1000/50) + 'x'
+            );
+        };
+
+        GP.nextFile = function () {
+            let file = GP.files.shift();
+            if (!file) {
+                $.LoadingOverlay("hide");
+                return;
+            }
+            fetch(file).then(function (response) {
+                return response.json();
+            }).then(function (response) {
+                GP.addLine(response);
+                GP.nextFile();
+            });
+        };
+
+        GP.ready = function(){
+            let val = localStorage.getItem("flyTrack");
+            if (val) {
+                let dec = JSON.parse(val);
+                console.warn("Show track", dec);
+                GP.addLine(dec);
+                localStorage.removeItem("flyTrack");
+            } else {
+                console.warn("Ready empty");
+            }
+
+            // $("#timeline").on("mousemove", function ($event) {
+            //     // console.log($event);
+            //     let rel = $event.offsetX / $(this).width();
+            //     GP.setTimePosition(GP.start + (GP.end - GP.start) * rel);
+            // });
+
+            GP.displaySpeed();
+
+            GP.files = [];
+            if (GP.files.length > 0) {
+                $.LoadingOverlay("show");
+                GP.nextFile();
+            }
+
+            
+            $('#play-start').on("click", function($event) {
+                $event.preventDefault(true);
+                GP.play();
+            });
+            $('#play-stop').on("click", function($event) {
+                $event.preventDefault(true);
+                GP.stop();
+            });
+            $('#play-slower').on("click", function($event) {
+                $event.preventDefault(true);
+                GP.goSlower();
+            });
+            $('#play-faster').on("click", function($event) {
+                $event.preventDefault(true);
+                GP.goFaster();
+            });
+
+            $('#record-gif').on("click", function($event) {
+                $event.preventDefault();
+                GP.initializeRec();
+                $('#record-gif').hide();
+                GP.captureMode = true;
+            });
+            $('#rec-close').on("click", function($event) {
+                $event.preventDefault();
+                // $('#frame-controls').hide();
+                $('#frame').hide();
+                // $('#frame-timer').hide();
+                $('#record-gif').show();
+                GP.captureMode = false;
+                GP.captureStream.getTracks().forEach(track => track.stop());
+            });
+            $('#rec-start').on("click", function($event) {
+                $event.preventDefault();
+                GP.recordStart();
+            });
+            $('#rec-stop').on("click", function($event) {
+                $event.preventDefault();
+                GP.recordStop();
+            });
+            $('#rec-inc').on("click", function($event) {
+                $event.preventDefault();
+                GP.sizeW += 32;
+                GP.sizeH += 18;
+                $('#frame').css({
+                    'width': GP.sizeW + 'px',
+                    'height': GP.sizeH + 'px'
+                });
+            });
+            $('#rec-dec').on("click", function($event) {
+                $event.preventDefault();
+                GP.sizeW -= 32;
+                GP.sizeH -= 18;
+                $('#frame').css({
+                    'width': GP.sizeW + 'px',
+                    'height': GP.sizeH + 'px'
+                });
+            });
+            // $('#frame').on("click", function ($event) {
+            //     $event.preventDefault();
+            //     GP.recordStop();
+            // });
+
+            GP.canvas = document.createElement("canvas");
+            GP.context = GP.canvas.getContext("2d");
+            GP.video = document.createElement("video");
+            GP.canvas.width = GIFW;
+            GP.canvas.height = GIFH;
+
+            // document.body.appendChild(GP.canvas);
+            // document.body.appendChild(GP.video);
+            GP.canvas.style.position = 'absolute';
+            GP.canvas.style.left = '1700px';
+            GP.canvas.style.top = '80px';
+            GP.canvas.style.zIndex = '1200000';
+            GP.canvas.style.border = "thick solid #0000FF";
+            GP.video.autoplay = true;
+            GP.video.style.position = 'absolute';
+            GP.video.style.left = '1700px';
+            GP.video.style.top = '500px';
+            GP.video.style.zIndex = '1500000';
+            GP.video.style.border = "thick solid #0000FF";
+        };
+
+        GP.showFrame = function () {
+            GP.sizeW = GIFW;
+            GP.sizeH = GIFH;
+            $('#frame').css({
+                'width': GP.sizeW + 'px',
+                'height': GP.sizeH + 'px'
+            }).show();
+            // addClass('pe-none')
+            $('#frame-timer').html("0.00");
+            $('#frame-controls').hide();
+        };
+        GP.initializeRec = function () {
+            // GP.canvas.width = window.innerWidth;
+            // GP.canvas.height = window.innerHeight;
+            try {
+                navigator.mediaDevices.getDisplayMedia({ displaySurface: "browser", preferCurrentTab: true}).then(function (captureStream) {
+                    const displaySettings = captureStream.getTracks()[0].getSettings();
+                    console.info(displaySettings);
+
+                    GP.showFrame();
+                    GP.video.srcObject = captureStream;
+                    GP.captureStream = captureStream;
+                    // canvas.width = video.videoWidth;
+                    // canvas.height = video.videoHeight;
+                    // captureStream.getTracks().forEach(track => track.stop());
+                    window.requestAnimationFrame(GP.checkFrame);
+                });
+                // GP.video.onclick = function () {
+                //     GP.canvas.width = 400;
+                //     GP.canvas.height = 300;
+                //     GP.context.drawImage(GP.video, 400, 250, 400, 300, 0, 0, 400, 300);
+                //     GP.canvas.toBlob(function(blob) {
+                //         GP.downloadFile(blob, "z-image-" + (new Date()).getTime() + ".png");
+                //     });
+                // };
+            } catch (err) {
+                console.error("Error: " + err);
+            }
+        };
+        GP.checkFrame = function () {
+            if (GP.video.videoWidth > 0) {
+                $('#frame-controls').show();
+                return;
+            }
+            window.requestAnimationFrame(GP.checkFrame);
+        };
+
+        GP.capture = function () {
+            GP.initializeRec();
+        };
+        GP.saveFrame = function () {
+            let left = $('#frame').offset().left;
+            let top = $('#frame').offset().top;
+            GP.context.drawImage(GP.video, left + 1, top + 1, GP.sizeW, GP.sizeH, 0, 0, GP.sizeW, GP.sizeH);
+            GP.savedFrames++;
+            GP.gif.addFrame(GP.context, {
+                delay: 100,
+                copy: true
+            });
+            console.info('Add Frame!', GP.savedFrames);
+            // window.requestAnimationFrame(GP.checkFrame);
+            let time = GP.savedFrames * 0.1;
+            $('#frame-timer').text(time.toFixed(2));
+
+            if (!GP.playing || GP.savedFrames === MAX_FRAMES) {
+                GP.stop();
+                GP.saveMode = false;
+                GP.gif.addFrame(GP.context, {
+                    delay: 5000,
+                    copy: true
+                });
+                // $("#frame").addClass("pe-none");
+                $("#controls").show();
+                $.LoadingOverlay("show");
+                GP.gif.render();
+            } else {
+                setTimeout(GP.saveFrame, 100);
+            }
+        };
+        GP.recordStop = function () {
+            GP.stop();
+        };
+        GP.recordStart = function () {
+            // $("#frame").removeClass("pe-none");
+            // $("#frame-controls").hide();
+            $("#rec-start").hide();
+            $("#rec-close").css({'visibility': 'hidden'});
+            $("#rec-stop").show();
+            $("#rec-inc").hide();
+            $("#rec-dec").hide();
+            GP.saveMode = true;
+            GP.savedFrames = 0;
+            GP.canvas.width = GP.sizeW;
+            GP.canvas.height = GP.sizeH;
+            GP.gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: GP.sizeW,
+                height: GP.sizeH,
+                workerScript: "/gps-strava-flyby/js/gif.worker.js"
+            });
+            GP.gif.on('finished', function(blob) {
+                //GP.captureStream.getTracks().forEach(track => track.stop());
+                //window.open(URL.createObjectURL(blob));
+                GP.downloadFile(blob, "fly-" + GP.lines[0].date + ".gif", "image/gif");
+                // alert("READY!");
+                $.LoadingOverlay("hide");
+                // $("#frame-controls").show();
+                $("#rec-start").show();
+                // $("#rec-close").show();
+                $("#rec-close").css({'visibility': 'visible'});
+                $("#rec-stop").hide();
+                $("#rec-inc").show();
+                $("#rec-dec").show();
+            });
+            GP.play();
+            GP.saveFrame();
+            $("#controls").hide();
+            // GP.playSpeed = 30;
+            // GP.displaySpeed();
+        };
+
+        GP.downloadFile = function (bb, filename, MIME_TYPE) {
+            let $outputs = $("<div id='output'></div>");
+            $("body").append($outputs);
+            let output = $outputs[0];
+
+            let a = document.createElement('a');
+            a.download = filename;
+            a.href = window.URL.createObjectURL(bb);
+            a.textContent = 'Download';
+
+            a.dataset.downloadurl = [MIME_TYPE, a.download, a.href].join(':');
+            a.draggable = true; // Don't really need, but good practice.
+            a.classList.add('dragout');
+            output.appendChild(a);
+            setTimeout(function() {
+                a.click();
+            }, 100);
+            a.onclick = function(e) {
+                // if ('disabled' in this.dataset) {
+                //   return false;
+                // }
+                // cleanUp(this);
+                a.style.display = 'none';
+                output.removeChild(a);
+            };
+        };
+
+        document.addEventListener("DOMContentLoaded", function(){
+            GP.askPosition();
+            GP.defaultPosition();
+        });
+
+    </script>
+</body>
+</html>

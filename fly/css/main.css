@@ -1,0 +1,164 @@
+html, body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    font: 16px "Segoe UI";
+}
+#map {
+    height: 100%;
+}
+#controls {
+    position: absolute;
+    z-index: 1000000;
+    bottom: 200px;
+    background: rgba(255, 255, 255, 0.80);
+    padding: 2px 10px 2px 5px;
+}
+#controls a {
+    text-decoration: none;
+    font-size: 24px;
+}
+#timeline {
+    font: 16px "Segoe UI Light";
+    position: absolute;
+    z-index: 1000000;
+    height: 200px;
+    bottom: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.80);
+}
+#frame-timer {
+    background: rgba(255, 255, 255, 0.80);
+    padding: 2px 10px;
+    font: 16px "Segoe UI Light";
+}
+#frame-now {
+    float: right;
+    background: rgba(255, 255, 255, 0.80);
+    padding: 2px 10px;
+    font: 16px "Segoe UI Light";
+    min-width: 58px;
+    text-align: left;
+}
+/*#timeline * {*/
+/*    pointer-events: none;*/
+/*}*/
+#start {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+    padding: 5px;
+    left: 0px;
+    text-align: left;
+}
+#end {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+    padding: 5px;
+    right: 0px;
+    text-align: right;
+}
+#timer {
+    position: absolute;
+    z-index: 1000000;
+    top: 12px;
+    right: 60px;
+    text-align: right;
+}
+#timer .position {
+    font-size: 48px;
+    color: black;
+    text-shadow: 2px 2px 0px #FFFFFF, 5px 4px 0px rgba(0,0,0,0.15);
+}
+#timer .total {
+    font-size: 24px;
+    color: black;
+    text-shadow: 2px 2px 0px #FFFFFF, 5px 4px 0px rgba(0,0,0,0.15);
+}
+#timeline canvas {
+    height: 100%;
+    width: 100%;
+}
+#list {
+    position: absolute;
+    z-index: 1000000;
+    width: 300px;
+    top: 12px;
+    left: 60px;
+    border: 1px solid rgba(187, 187, 187, 0.6);
+    /*background-color: #ffffff55;*/
+    background-color: #f5f5f5;
+    padding: 3px;
+    /*height: 500px;*/
+    /*max-height: calc(90vh - 40px);*/
+    /*box-shadow: 2px 3px 6px 0px #0B325E, 2px 2px 2px 2px rgba(0,0,0,0);*/
+    max-height: calc(100vh - 250px - 12px);
+    overflow: auto;
+}
+img.rounded {
+    border-radius: 50%;
+    border: 2px solid;
+}
+.tracks {
+
+}
+#link {
+    text-align: right;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+#link a {
+    text-decoration: none;
+}
+.tracks .track {
+    padding: 4px;
+    margin: 2px;
+    background: rgba(255, 255, 255, 0.4);
+}
+.tracks img {
+    pointer-events: none;
+    width: 24px;
+    height: 24px;
+    border: 2px solid;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+.del {
+    float: right;
+    cursor: pointer;
+}
+.tracks .link {
+    color: cornflowerblue;
+    text-decoration: none;
+}
+img.disabled {
+    opacity: 0.5;
+}
+
+
+.color0 img, img.color0 {
+    border-color: black;
+}
+.color1 img, img.color1 {
+    border-color: red;
+}
+.color2 img, img.color2 {
+    border-color: blue;
+}
+.color3 img, img.color3 {
+    border-color: green;
+}
+.color4 img, img.color4 {
+    border-color: yellow;
+}
+.pe-none {
+    pointer-events: none;
+}
+#frame-controls a {
+    text-decoration: none;
+    font-size: 24px;
+    pointer-events: auto !important;
+}
