@@ -13,6 +13,10 @@
         let idx = null;
         let idt = null;
 
+        let baseList = window.location.href.split("/");
+        baseList.pop();
+        let base = baseList.join("/");
+
         function processDoc(doc)
         {
             idx = (new Date()).getTime();
@@ -28,14 +32,30 @@
                     window.opener.postMessage({
                         event: "timeout"
                     }, "*");
-                    // Load track in window:
-                    // channel.postMessage({
-                    //     action: "load",
-                    //     doc: doc,
-                    //     id: idx
-                    // });
                     localStorage.setItem("activeBin", doc);
-                    window.location.href = "/#new";
+                    window.location.href = base + "/#new";
+                }
+            }, 1000);
+        }
+
+        function flyDoc(doc)
+        {
+            idx = (new Date()).getTime();
+
+            // Try addTrack to fly viewer:
+            channel.postMessage({
+                action: "fly",
+                doc: doc,
+                id: idx
+            });
+
+            idt = setTimeout(function () {
+                if (!isAccepted) {
+                    window.opener.postMessage({
+                        event: "timeout"
+                    }, "*");
+                    localStorage.setItem("flyTrack", doc);
+                    window.location.href = base + "/fly/#new";
                 }
             }, 1000);
         }
@@ -43,12 +63,12 @@
         const channel = new BroadcastChannel("gpxChannel");
         channel.addEventListener("message", function (event) {
             console.info("BC-window", event.data);
-            switch (event.data.action) {
-                case "load":
-                    localStorage.setItem("activeBin", event.data.doc);
-                    window.location.href = "/#new";
-                    break;
-            }
+            // switch (event.data.action) {
+            //     case "load":
+            //         localStorage.setItem("activeBin", event.data.doc);
+            //         window.location.href = base + "/#new";
+            //         break;
+            // }
 
             switch (event.data.event) {
                 case "ok":
@@ -65,6 +85,9 @@
             switch (event.data.action) {
                 case "process":
                     processDoc(event.data.doc);
+                    break;
+                case "fly":
+                    flyDoc(event.data.doc);
                     break;
             }
         });

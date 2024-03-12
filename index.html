@@ -80,7 +80,7 @@
             '#cc66cc',
             '#cc33cc'
         ];
-        var megaajaxer = '<div class="megaajaxer" style="text-align: center; padding: 10px;"><img src="/images/megaajax.gif" alt=""/></div>';
+        var megaajaxer = '<div class="megaajaxer" style="text-align: center; padding: 10px;"><img src="images/megaajax.gif" alt=""/></div>';
 
         var serverUrl = window.location.origin + '/';
 
@@ -1565,7 +1565,7 @@
                 else
                     files = RService.fileList;
 
-                var imgs = UI.filesService == 'local' ?  '/images/dir.png' : '/images/dir-' + UI.filesService + '.png';
+                var imgs = UI.filesService == 'local' ?  'images/dir.png' : 'images/dir-' + UI.filesService + '.png';
 
                 for (var i = 0; i < files.length; i++)
                 {
@@ -1584,11 +1584,11 @@
                     {
                         var $a = $('<a class="track"></a>');
                         if (files[i].ext == "kml" || files[i].ext == "kmz")
-                            $img.attr('src', '/images/kml.png');
+                            $img.attr('src', 'images/kml.png');
                         else if (files[i].ext == "gpx")
-                            $img.attr('src', '/images/gpx.png');
+                            $img.attr('src', 'images/gpx.png');
                         else
-                            $img.attr('src', '/images/json.png');
+                            $img.attr('src', 'images/json.png');
                     }
 
                     $a.attr('href', '#');
@@ -1689,7 +1689,7 @@
                     $('#file-info').css('visibility', 'visible');
                     if (source == 'local')
                     {
-                        $('#file-info-img').attr('src', '/images/json.png');
+                        $('#file-info-img').attr('src', 'images/json.png');
                         $('#file-info-link').hide();
                         $('#file-reload-link').show();
                     }
@@ -1698,7 +1698,7 @@
                         //$('#file-info-img').show();
                         if (source == 'google')
                         {
-                            $('#file-info-img').attr('src', '/images/drive-16.png');
+                            $('#file-info-img').attr('src', 'images/drive-16.png');
                             $('#file-reload-link').show();
                             $('#file-info-link').show();
                             $('#file-info-link').attr('href', 'https://drive.google.com/file/d/' + fileId + '/view');
@@ -1706,7 +1706,7 @@
                         else if (source == 'dropbox')
                         {
                             var fName = basename(fileId);
-                            $('#file-info-img').attr('src', '/images/dropbox-16.png');
+                            $('#file-info-img').attr('src', 'images/dropbox-16.png');
                             $('#file-reload-link').show();
                             $('#file-info-link').show();
                             $('#file-info-link').attr('href', 'https://www.dropbox.com/home/' + encodeURIComponent(fileId.substr(1, fileId.length - fName.length - 2)) + '?preview=' + urlencode(fName));
@@ -3214,7 +3214,7 @@
             </div>
             
             <div id="file-info" class="fileInfo" style="visibility: hidden">
-                <div><img id="file-info-img" src="/images/json.png" alt=""/> <span id="file-info-name"></span>
+                <div><img id="file-info-img" src="images/json.png" alt=""/> <span id="file-info-name"></span>
                     <a class="label label-info" id="file-info-link" target="_blank" href="#">View/Share</a>
                     <a class="label label-success" id="file-save-link" title="Replaces saved file without confirmation" href="#">Save</a>
                     <a class="label label-warning" id="file-reload-link" title="Reload file from saved location" href="#">Reload</a>
@@ -3339,7 +3339,7 @@
             </div>
 
             <div class="position">
-                <a id="wiki" target="_blank" href="http://wikimapia.org/" title="Wikimapia" style="display: none;"><img style="" alt="Wikimapia" src="/images/wiki.png"/></a>
+                <a id="wiki" target="_blank" href="http://wikimapia.org/" title="Wikimapia" style="display: none;"><img style="" alt="Wikimapia" src="images/wiki.png"/></a>
                 <span class="pointer" style="display: none"><input type="text" id="pointer" name="pointer" value=""/> <a href="#" id="pointer-go" class="label label-success">go</a> <a href="#" id="pointer-cancel" class="label label-info">cancel</a></span>
                 <span class="part" id="pos_ll"></span>
                 <span class="part" id="pos_xy"></span>
