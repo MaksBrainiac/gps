@@ -84,6 +84,10 @@
 
         var serverUrl = window.location.origin + '/';
 
+        let baseList = window.location.href.split("/");
+        baseList.pop();
+        let base = baseList.join("/");
+
         $.blockUI.defaults.blockMsgClass = 'loaderUI alert alert-info';
         $.blockUI.defaults.css.color = null;
         $.blockUI.defaults.css.border = null;
@@ -2608,7 +2612,7 @@
                         case "doc":
                             document.title = "GPS Travel Maker (***)";
                             RService.doImport(event.data.doc, true, fclear, event.data.doc.indexOf('djbin') >= 0);
-                            window.history.replaceState({}, document.title, '/');
+                            window.history.replaceState({}, document.title, base + '/');
                             // localStorage.removeItem("activeBin");
 
                             channel.postMessage({
@@ -2638,15 +2642,15 @@
                         let doc = localStorage.getItem("activeBin");
                         if (doc)
                             RService.processDoc(JSON.parse(doc), true);
-                        window.history.replaceState({}, document.title, '/');
+                        window.history.replaceState({}, document.title, base + '/');
                     } else if (document.location.hash.length > 1 && document.location.hash.indexOf('#dj') >= 0) {
                         RService.doImport(document.location.hash.substr(1), false, fclear, document.location.hash.indexOf('#djbin') >= 0);
-                        window.history.replaceState({}, document.title, '/');
+                        window.history.replaceState({}, document.title, base + '/');
                     } else if (document.location.hash.length > 1 && document.location.hash.indexOf('#bj') >= 0) {
                         // localStorage.setItem("activeBin", document.location.hash.substr(4));
                         $.blockUI({ message: "Loading" });
                         RService.doImport(document.location.hash.substr(4), false, fclear, document.location.hash.indexOf('djbin') >= 0);
-                        window.history.replaceState({}, document.title, '/');
+                        window.history.replaceState({}, document.title, base + '/');
                     } else {
                         var doc = ActiveDocument.recover();
                         if (doc) {
@@ -2701,7 +2705,7 @@
 
                 UI.setDocumentTitle('local');
                 ActiveDocument.autoSaveDoc();
-                window.history.replaceState({}, document.title, '/');
+                window.history.replaceState({}, document.title, base + '/');
             },
 
             serialize: function(){
