@@ -28,6 +28,8 @@ KML.parse = function(fdata, _icons){
 
     var _type = null;
     var _rpoints = null;
+    var _visible = true;
+    var _blocked = false;
 
     var inDataKey = null;
 
@@ -85,6 +87,12 @@ KML.parse = function(fdata, _icons){
                         if (zstyle.opacity)
                             track.style.opacity = zstyle.opacity;
                     }
+                }
+                if (_visible !== null) {
+                    track.visible = _visible;
+                }
+                if (_blocked !== null) {
+                    track.blocked = _blocked;
                 }
                 break;
             case "Point":
@@ -197,10 +205,14 @@ KML.parse = function(fdata, _icons){
             case "value":
                 if (inDataKey)
                 {
-                    if (inDataKey == "type")
+                    if (inDataKey === "type")
                         _type = data;
-                    else if (inDataKey == "rpoints")
+                    else if (inDataKey === "rpoints")
                         _rpoints = data.split(",");
+                    else if (inDataKey === "visible")
+                        _visible = data === 'on';
+                    else if (inDataKey === "blocked")
+                        _blocked = data === 'on';
                 }
                 break;
 
