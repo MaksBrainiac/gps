@@ -1,5 +1,5 @@
 // use strict
-var KML = {
+const KML = {
 };
 
 KML.parse = function(fdata, _icons){
@@ -338,4 +338,104 @@ KML.parse = function(fdata, _icons){
         //limits: {lat: slatLimits, lng: slonLimits},
         //center: {lat: slat, lng: slon}
     };
+};
+
+KML.convert = function(json) {
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>';
+    xml += '<kml xmlns="http://earth.google.com/kml/2.2">';
+    xml += '<Document>';
+    xml += '<name></name>';
+    xml += '<description>ツ</description>';
+
+    const styles = {};
+
+    json.waypoints.forEach(waypoint => {
+        if (!styles[waypoint.icon]) {
+            xml += '<Style id="myGPSPointStyle' + waypoint.icon + '">';
+            xml += '<IconStyle>';
+            xml += '<Icon>';
+            xml += '<href>' + IconConvertor.getGStaticIconForKML(waypoint.icon) + '</href>';
+            xml += '</Icon>';
+            xml += '</IconStyle>';
+            xml += '</Style>';
+
+            styles[waypoint.icon] = 1;
+        }
+    });
+
+    let k = 1;
+    json.tracks.forEach(track => {
+        const op = (Math.ceil(track.style.opacity * 255)).toString(16).padStart(2, '0');
+        const color = [
+            track.style.color.substring(5, 7),
+            track.style.color.substring(3, 5),
+            track.style.color.substring(1, 3)
+        ];
+
+        xml += '<Style id="myGPSLineStyle' + k + '">';
+        xml += '<LineStyle>';
+        xml += '<color>' + op + color.join('') + '</color>';
+        xml += '<width>' + track.style.width + '</width>';
+        xml += '</LineStyle>';
+        xml += '</Style>';
+        k++;
+    });
+
+    json.waypoints.forEach(waypoint => {
+        xml += '<Placemark>';
+        xml += '<name>' + escapeHtml(waypoint.name) + '</name>';
+        xml += '<styleUrl>#myGPSPointStyle' + waypoint.icon + '</styleUrl>';
+        xml += '<Point>';
+        xml += '<coordinates>' + waypoint.position.y + ',' + waypoint.position.x + ',0.000000</coordinates>';
+        xml += '</Point>';
+        xml += '</Placemark>';
+    });
+
+    k = 1;
+    json.tracks.forEach(track => {
+        const points = [];
+        const routePoints = [];
+        let kkx = 0;
+
+        track.points.forEach((p, i) => {
+            routePoints.push(kkx);
+            points.push(p);
+            kkx++;
+
+            if (track.type === "ROUTE") {
+                if (track.segments[i]) {
+                    track.segments[i].forEach(sp => {
+                        points.push(sp);
+                        kkx++;
+                    });
+                }
+            }
+        });
+
+        xml += '<Placemark>';
+        xml += '<name>' + escapeHtml(track.name) + '</name>';
+        xml += '<styleUrl>#myGPSLineStyle' + k + '</styleUrl>';
+        xml += '<ExtendedData>';
+        if (track.type === "ROUTE") {
+            xml += '<Data name="type"><value>ROUTE</value></Data>';
+            xml += '<Data name="rpoints"><value>' + routePoints.join(",") + '</value></Data>';
+        }
+        if (track.visible !== undefined) {
+            xml += '<Data name="visible"><value>' + (track.visible ? 'on' : 'off') + '</value></Data>';
+        }
+        if (track.blocked !== undefined) {
+            xml += '<Data name="blocked"><value>' + (track.blocked ? 'on' : 'off') + '</value></Data>';
+        }
+        xml += '</ExtendedData>';
+        xml += '<LineString>';
+        xml += '<tessellate>1</tessellate>';
+        xml += '<coordinates>' + points.map(p => p.y + ',' + p.x + ',0.000000').join('\n') + '</coordinates>';
+        xml += '</LineString>';
+        xml += '</Placemark>';
+        k++;
+    });
+
+    xml += '</Document>';
+    xml += '</kml>';
+    return xml;
 };

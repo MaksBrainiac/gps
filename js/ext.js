@@ -1,5 +1,5 @@
 // use strict
-var EXT = {
+const EXT = {
 };
 
 EXT.render = function (json) {
@@ -26,11 +26,24 @@ EXT.save = function (json, format, name) {
     let ext = null;
     let mime = null;
     let fileData = null;
+    let taBlob = null;
 
     if (!name)
         name = 'track-' + (new Date()).getTime();
 
     switch (format) {
+        case "KML":
+        case "KMZ":
+            ext = format.toLocaleLowerCase();
+            mime = ext === 'kml' ? 'application/vnd.google-earth.kml+xml' : 'application/vnd.google-earth.kmz';
+            fileData = KML.convert(EXT.render(json));
+            if (ext === "kmz") {
+                let zip = new JSZip();
+                zip.file("doc.kml", fileData);
+                taBlob = zip.generate({type: "blob"});
+            }
+            break;
+
         case "GPXt":
         case "GPXr":
         case "GPX":
@@ -46,7 +59,8 @@ EXT.save = function (json, format, name) {
 
     let tempLink = document.createElement("a");
 
-    let taBlob = new Blob([fileData], {type: mime});
+    if (!taBlob)
+        taBlob = new Blob([fileData], {type: mime});
     tempLink.setAttribute('href', URL.createObjectURL(taBlob));
     tempLink.setAttribute('download', name + '.' + ext);
     tempLink.click();
