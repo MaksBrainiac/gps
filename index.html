@@ -866,6 +866,12 @@
                     UI.saveFileDialog('local');
                     e.preventDefault();
                 });
+                $('#savePopupFiles').click(function(e){
+                    UI.doWithService('files', function(){
+                        UI.saveFileDialog('files');
+                    });
+                    e.preventDefault();
+                });
                 $('#savePopupGoogle').click(function(e){
                     UI.doWithService('google', function(){
                         UI.saveFileDialog('google');
@@ -885,6 +891,12 @@
                     UI.openFileDialog('local');
                     e.preventDefault();
                 });
+                $('#openPopupFiles').click(function(e){
+                    UI.doWithService('files', function(){
+                        UI.openFileDialog('files');
+                    });
+                    e.preventDefault();
+                });
                 $('#openPopupGoogle').click(function(e){
                     UI.doWithService('google', function(){
                         UI.openFileDialog('google');
@@ -901,7 +913,7 @@
 
             onLoginSuccessful: null,
 
-            doWithService: function(service, next){
+            doWithService: function(service, next) {
                 var key = 'auth' + service.ucFirst();
                 //var func = 'ask' + service.ucFirst() + 'Login';
                 var func = 'do' + service.ucFirst() + 'Login';
@@ -911,7 +923,15 @@
                     next();
             },
 
-            doGoogleLogin: function(next){
+            doFilesLogin: function(next) {
+                window.showDirectoryPicker({mode: "readwrite"}).then(function (dirHandle) {
+                    User.authFiles = true;
+                    User.dirHandle = dirHandle;
+                    next();
+                });
+            },
+
+            doGoogleLogin: function(next) {
                 UI.onLoginSuccessful = next;
                 window.open('/google.php', 'gauth', "centerscreen,location=no,width=600,height=800,left=300,top=200");
             },
@@ -970,10 +990,17 @@
                     e.preventDefault();
                 });
 
-                $('#menuFileSave').click(function(e){
+                $('#menuFileSave').click(function($event){
+                    $event.preventDefault();
                     GP.setEditMode('NONE');
-                    UI.goSaveFile(null, null);
-                    e.preventDefault();
+
+                    if (ActiveDocument.source === "local") {
+                        UI.goSaveFile(ActiveDocument.source, null);
+                    } else {
+                        UI.doWithService(ActiveDocument.source, function () {
+                            UI.goSaveFile(ActiveDocument.source, null);
+                        });
+                    }
                 });
 
                 $('#debug-toggle').click(function(e){
@@ -1005,37 +1032,32 @@
                     e.preventDefault();
                 });
 
-                $('#file-save-link').click(function(e){
-                    e.preventDefault();
+                $('#file-save-link').click(function ($event){
+                    $event.preventDefault();
                     GP.setEditMode('NONE');
-                    if (ActiveDocument.source == "local") {
+                    if (ActiveDocument.source === "local") {
                         UI.goSaveFile(ActiveDocument.source, null);
-                    }
-                    else {
+                    } else {
                         UI.doWithService(ActiveDocument.source, function () {
                             UI.goSaveFile(ActiveDocument.source, null);
                         });
                     }
                 });
 
-                $('#file-reload-link').click(function(e){
-                    e.preventDefault();
+                $('#file-reload-link').click(function ($event) {
+                    $event.preventDefault();
                     GP.setEditMode('NONE');
-                    var keyId = 'fileId' + ActiveDocument.source.ucFirst();
-                    if (ActiveDocument.source == "local") {
-                        var doc = ActiveDocument.getLocal(ActiveDocument[keyId]);
-                        if (doc)
-                        {
+
+                    if (ActiveDocument.source === "local") {
+                        const doc = ActiveDocument.getLocal(ActiveDocument.fileId);
+                        if (doc) {
                             GP.clear();
                             RService.processDoc(doc, false);
                         }
-                    }
-                    else {
+                    } else {
                         UI.doWithService(ActiveDocument.source, function () {
-                            var keyId = 'fileId' + ActiveDocument.source.ucFirst();
-                            RService.loadFile(ActiveDocument.source, ActiveDocument[keyId], function(fileData){
-                                if (fileData.doc)
-                                {
+                            RService.loadFile(ActiveDocument.source, ActiveDocument.fileId, function (fileData) {
+                                if (fileData.doc) {
                                     GP.clear();
                                     RService.processDoc(fileData.doc, !fileData.simple && UI.autoSimplifyTracks);
                                 }
@@ -1527,33 +1549,22 @@
                     return;
                 }
 
-                var keyId = 'fileId' + into.ucFirst();
-                var keyName = 'fileName' + into.ucFirst();
-
                 ActiveDocument.autoSaveDoc();
-
-                if (ActiveDocument[keyId]) {
-                    if (into == 'local')
-                    {
-                        ActiveDocument.saveLocal(ActiveDocument.fileNameLocal);
+                if (ActiveDocument.fileId) {
+                    if (into === 'local') {
+                        ActiveDocument.saveLocal(ActiveDocument.fileName);
                         ActiveDocument.isModified = false;
-                        if (next !== null)
-                            next();
-                    }
-                    else
-                    {
-                        RService.doSaveFile(into, ActiveDocument[keyId], ActiveDocument[keyName], '', '', function(file){
-                            ActiveDocument[keyId] = file.fileId;
-                            ActiveDocument[keyName] = file.title;
+                        if (next !== null) next();
+                    } else {
+                        RService.doSaveFile(into, ActiveDocument.fileId, ActiveDocument.fileName, '', '', function (file) {
+                            ActiveDocument.fileId = file.fileId;
+                            ActiveDocument.fileName = file.title;
                             ActiveDocument.source = into;
                             ActiveDocument.isModified = false;
-
-                            if (next !== null)
-                                next();
+                            if (next !== null) next();
                         });
                     }
-                }
-                else {
+                } else {
                     UI.saveFileDialog(into, next);
                 }
             },
@@ -1676,86 +1687,64 @@
                 }
             },
 
-            setDocumentTitle: function(source){
-                var keyId = 'fileId' + source.ucFirst();
-                var keyName = 'fileName' + source.ucFirst();
-                var fileId =    ActiveDocument[keyId];
-                var fileName =  ActiveDocument[keyName];
+            setDocumentTitle: function (source) {
+                const fileId = ActiveDocument.fileId;
+                const fileName = ActiveDocument.fileName;
 
-                if (fileId == null)
-                {
+                if (fileId == null) {
                     $('#file-info').css('visibility', 'hidden');
-                }
-                else
-                {
+                } else {
                     $('#file-info-name').text(fileName);
                     $('#file-info').css('visibility', 'visible');
-                    if (source == 'local')
-                    {
+                    if (source === 'local') {
                         $('#file-info-img').attr('src', 'images/json.png');
                         $('#file-info-link').hide();
                         $('#file-reload-link').show();
-                    }
-                    else
-                    {
-                        //$('#file-info-img').show();
-                        if (source == 'google')
-                        {
-                            $('#file-info-img').attr('src', 'images/drive-16.png');
-                            $('#file-reload-link').show();
-                            $('#file-info-link').show();
-                            $('#file-info-link').attr('href', 'https://drive.google.com/file/d/' + fileId + '/view');
-                        }
-                        else if (source == 'dropbox')
-                        {
-                            var fName = basename(fileId);
-                            $('#file-info-img').attr('src', 'images/dropbox-16.png');
-                            $('#file-reload-link').show();
-                            $('#file-info-link').show();
-                            $('#file-info-link').attr('href', 'https://www.dropbox.com/home/' + encodeURIComponent(fileId.substr(1, fileId.length - fName.length - 2)) + '?preview=' + urlencode(fName));
-                        }
-                        else
-                        {
-                            $('#file-reload-link').hide();
-                            $('#file-info-link').hide();
-                        }
+                    } else if (source === 'files') {
+                        $('#file-info-link').hide();
+                        $('#file-reload-link').show();
+                        $('#file-info-img').hide();
+                    } else if (source === 'google') {
+                        $('#file-info-img').attr('src', 'images/drive-16.png');
+                        $('#file-reload-link').show();
+                        $('#file-info-link').show();
+                        $('#file-info-link').attr('href', 'https://drive.google.com/file/d/' + fileId + '/view');
+                    } else if (source === 'dropbox') {
+                        var fName = basename(fileId);
+                        $('#file-info-img').attr('src', 'images/dropbox-16.png');
+                        $('#file-reload-link').show();
+                        $('#file-info-link').show();
+                        $('#file-info-link').attr('href', 'https://www.dropbox.com/home/' + encodeURIComponent(fileId.substr(1, fileId.length - fName.length - 2)) + '?preview=' + urlencode(fName));
+                    } else {
+                        $('#file-reload-link').hide();
+                        $('#file-info-link').hide();
                     }
                 }
-                if (fileId)
+                if (fileId) {
                     document.title = 'GPS Travel Maker - ' + fileName;
-                else
+                } else {
                     document.title = 'GPS Travel Maker';
+                }
             },
 
-            openFileCallback: function(fileId){
-
-                if (UI.filesService == 'local')
-                {
-                    var doc = ActiveDocument.getLocal(fileId);
-                    if (doc)
-                    {
-                        if (!UI.layerMode)
-                        {
-                            ActiveDocument.fileIdLocal = fileId;
-                            ActiveDocument.fileNameLocal = fileId;
+            openFileCallback: function (fileId) {
+                if (UI.filesService === 'local') {
+                    const doc = ActiveDocument.getLocal(fileId);
+                    if (doc) {
+                        if (!UI.layerMode) {
+                            ActiveDocument.fileId = fileId;
+                            ActiveDocument.fileName = fileId;
                             UI.setDocumentTitle('local');
                         }
                         RService.processDoc(doc, false);
                     }
-                }
-                else
-                {
+                } else {
                     RService.loadFile(UI.filesService, fileId, function(fileData){
-                        if (fileData.doc)
-                        {
-                            if (!UI.layerMode)
-                            {
-                                var keyId = 'fileId' + UI.filesService.ucFirst();
-                                var keyName = 'fileName' + UI.filesService.ucFirst();
-                                ActiveDocument[keyId] = fileId;
-                                ActiveDocument[keyName] = fileData.title;
+                        if (fileData.doc) {
+                            if (!UI.layerMode) {
+                                ActiveDocument.fileId = fileId;
+                                ActiveDocument.fileName = fileData.title;
                                 ActiveDocument.source = UI.filesService;
-
                                 UI.setDocumentTitle(UI.filesService);
                             }
                             RService.processDoc(fileData.doc, !fileData.simple && UI.autoSimplifyTracks);
@@ -1765,7 +1754,6 @@
             },
 
             saveFileDialog: function(into, next){
-
                 ActiveDocument.autoSaveDoc();
 
                 var visible;
@@ -1793,14 +1781,8 @@
                 $('#externalSaveFile').show();
 
                 if (!visible) {
-                    var keyName = "fileName" + ActiveDocument.source.ucFirst();
-                    var fileName = ActiveDocument[keyName];
-
-                    if (ActiveDocument.source == 'local')
-                    {
-                        /*if (ActiveDocument.fileNameLocal)
-                            $('#mySaveModal input[name=fileName]').val(ActiveDocument.fileNameLocal);
-                        else*/
+                    const fileName = ActiveDocument.fileName;
+                    if (ActiveDocument.source === 'local') {
                         if (fileName)
                             $('#mySaveModal input[name=fileName]').val(fileName);
                         else
@@ -1809,16 +1791,11 @@
                         $('#file-format').find('a').removeClass('btn-default').addClass('btn-primary');
                         $('#fileFormatKML').removeClass('btn-primary').addClass('btn-default');
                         $('#fileFormat').val('KML');
-                    }
-                    else
-                    {
+                    } else {
                         var format = fileName.split('.').pop().toLocaleUpperCase();
-                        if (['GEO', 'KML', 'KMZ', 'GPX'].indexOf(format) >= 0)
-                        {
+                        if (['GEO', 'KML', 'KMZ', 'GPX'].indexOf(format) >= 0) {
                             $('#mySaveModal input[name=fileName]').val(basename(fileName));
-                        }
-                        else
-                        {
+                        } else {
                             format = "KML";
                             $('#mySaveModal input[name=fileName]').val(fileName);
                         }
@@ -1888,13 +1865,12 @@
 
                 var __saveFunction;
 
-                if (UI.filesService == 'local')
-                {
+                if (UI.filesService === 'local') {
                     __saveFunction = function(){
-                        ActiveDocument.fileIdLocal = fileName;
-                        ActiveDocument.fileNameLocal = fileName;
+                        ActiveDocument.fileId = fileName;
+                        ActiveDocument.fileName = fileName;
                         ActiveDocument.source = 'local';
-                        ActiveDocument.saveLocal(ActiveDocument.fileNameLocal);
+                        ActiveDocument.saveLocal(ActiveDocument.fileName);
                         ActiveDocument.isModified = false;
                         ActiveDocument.autoSaveDoc();
 
@@ -1904,26 +1880,19 @@
                             UI.doAfterSave();
                     };
 
-                    if (ActiveDocument.hasLocal(fileName))
-                    {
+                    if (ActiveDocument.hasLocal(fileName)) {
                         UI.showMessage('Replace Saved File?', 'Confirmation', __saveFunction, function(){
                             UI.saveFileDialog(UI.filesService, UI.doAfterSave);
                         });
-                    }
-                    else
-                    {
+                    } else {
                         __saveFunction();
                     }
-                }
-                else
-                {
+                } else {
                     __saveFunction = function(){
                         ///console.log(UI.filesService, fileId, fileName, fileFormat, RService.directory);
                         RService.doSaveFile(UI.filesService, fileId, fileName, fileFormat, RService.directory, function(file){
-                            var keyId = 'fileId' + UI.filesService.ucFirst();
-                            var keyName = 'fileName' + UI.filesService.ucFirst();
-                            ActiveDocument[keyId] = file.fileId;
-                            ActiveDocument[keyName] = file.title;
+                            ActiveDocument.fileId = file.fileId;
+                            ActiveDocument.fileName = file.title;
                             ActiveDocument.source = UI.filesService;
                             ActiveDocument.isModified = false;
                             ActiveDocument.autoSaveDoc();
@@ -1935,14 +1904,11 @@
                         });
                     };
 
-                    if (fileId)
-                    {
+                    if (fileId) {
                         UI.showMessage('Replace Saved File?', 'Confirmation', __saveFunction, function(){
                             UI.saveFileDialog(UI.filesService, UI.doAfterSave);
                         });
-                    }
-                    else
-                    {
+                    } else {
                         __saveFunction();
                     }
                 }
@@ -2111,13 +2077,27 @@
             console.log("OVERLAY", ot);
             if (ot)
                 UI.activateOverlay(ot);
+
+            window.addEventListener("unhandledrejection", function (e) {
+                e.preventDefault();
+                console.error('AAAAAAA', e);
+            });
+            window.addEventListener("error", function (e) {
+                debugger;
+                UI.showError(
+                    e.error.message + '<br />' +
+                    e.source + ' as ' + e.lineno + ':' + e.colno
+                );
+            });
         }
     </script>
 
     <script type="text/javascript">
-        var RService = {
-
+        const RService = {
             reader: null,
+            opener: null,
+            openerId: null,
+            openerFunc: null,
             filesToProcess: [],
             fileList: [],
             dirFileList: [],
@@ -2176,6 +2156,40 @@
                     }
                     RService.processNextFile();
                 };
+
+                RService.opener = new FileReader();
+                RService.opener.onload = function (event) {
+                    let fileData = {
+                        fileId: RService.openerId,
+                        title: RService.currentFile.name,
+                        mime: null,
+                        ext: RService.currentFile.name.split('.').pop(),
+                        simple: false
+                    };
+
+                    if (RService.currentFile.name.indexOf('.kmz') >=0) {
+                        var zip = new JSZip();
+                        zip.load(event.target.result);
+                        var raw = zip.file("doc.kml").asText();
+                        fileData.doc = KML.parse(raw, GP.googleIcons);
+                    } else if (event.target.result.indexOf('{') == 0) {
+                        var doc = JSON.parse(event.target.result);
+                        if (!doc.tracks && !doc.waypoints) {
+                            doc = GEOJSON.parse(doc);
+                        } else {
+                            fileData.simple = true;
+                        }
+                        fileData.doc = doc;
+                    } else if (event.target.result.indexOf('<gpx') >= 0) {
+                        fileData.doc = GPX.parse(event.target.result);
+                    } else if (event.target.result.indexOf('<kml xmlns="') >= 0) {
+                        fileData.doc = KML.parse(event.target.result, GP.googleIcons);
+                    }
+                    if (fileData.doc.description.indexOf('ツ') >= 0)
+                        fileData.simple = true;
+
+                    RService.openerFunc(fileData);
+                };
             },
 
             doImport: function(url, askClear, onError, simplify){
@@ -2232,7 +2246,7 @@
             //         location.href = 'getfile.php?file=' + file + (as ? '&as=' + escape(as) : '');
             // },
 
-            doFile: function(format) {
+            doFile: function (format) {
                 $.blockUI({ message: null });
                 let doc = format === 'GPXtg1' ? GP.getGPSData(true, true) : GP.getGPSData(true);
                 if (format === 'GPXtg1') {
@@ -2244,7 +2258,7 @@
                     return;
                 }
 
-                EXT.save(doc, format, ActiveDocument['fileName' + ActiveDocument.source.ucFirst()]);
+                EXT.save(doc, format, ActiveDocument.fileName);
                 $.unblockUI();
             },
 
@@ -2284,102 +2298,121 @@
                             return;
                         }
 
-                        ///var keyName = 'fileName' + ActiveDocument.source.ucFirst();
-                        ///ActiveDocument['fileName' + ActiveDocument.source.ucFirst()]
                         if (next_file)
-                            next_file(data.file, ActiveDocument['fileName' + ActiveDocument.source.ucFirst()]);
+                            next_file(data.file, ActiveDocument.fileName);
                     }
                 });
             },
 
             doSaveFile: function(into, id, title, format, dir, next_file){
-                var key = 'auth' + into.ucFirst();
-                var saveArguments = arguments;
-                $.blockUI({ message: null });
-                $.ajax('saver.php', {
-                    data: {
-                        data: JSON.stringify(GP.getGPSData()),
-                        into: into,
-                        format: format,
-                        id: id,
-                        title: title,
-                        dir: dir
-                    },
-                    dataType: 'json',
-                    type: 'POST',
-                    error: function(data) {
-                        $.unblockUI();
-                        //User[key] = false;
+                if (into === "files") {
+                    EXT.saveFile(dir, id, title, format, GP.getGPSData(), function (data) {
+                        if (next_file != null)
+                            next_file(data);
+                    });
+                } else {
+                    var key = 'auth' + into.ucFirst();
+                    $.blockUI({ message: null });
+                    $.ajax('saver.php', {
+                        data: {
+                            data: JSON.stringify(GP.getGPSData()),
+                            into: into,
+                            format: format,
+                            id: id,
+                            title: title,
+                            dir: dir
+                        },
+                        dataType: 'json',
+                        type: 'POST',
+                        error: function(data) {
+                            $.unblockUI();
+                            //User[key] = false;
 
-                        console.error(data);
-                        UI.showError("Save File Error"); // TODO: if error try login again
-                    },
-                    success: function(data) {
-                        $.unblockUI();
-
-                        if (data.error)
-                        {
                             console.error(data);
+                            UI.showError("Save File Error"); // TODO: if error try login again
+                        },
+                        success: function(data) {
+                            $.unblockUI();
 
-                            if (data.error == "Auth Required")
+                            if (data.error)
                             {
-                                User[key] = false;
-                                UI.showError(data.error);
+                                console.error(data);
 
-                                var menuX = "#menuLoginX" + into.ucFirst();
-                                var details = "#user" + into.ucFirst() + "Details";
-                                $(menuX).show();
-                                $(details).css('opacity', 0.3);
+                                if (data.error == "Auth Required")
+                                {
+                                    User[key] = false;
+                                    UI.showError(data.error);
+
+                                    var menuX = "#menuLoginX" + into.ucFirst();
+                                    var details = "#user" + into.ucFirst() + "Details";
+                                    $(menuX).show();
+                                    $(details).css('opacity', 0.3);
+                                }
+                                else
+                                {
+                                    console.error(data);
+                                    UI.showError(data.error);
+                                    return;
+                                }
+                                return;
                             }
-                            else
+
+                            if (next_file != null)
+                                next_file(data);
+
+                            console.log(data);
+                        }
+                    });
+                }
+            },
+
+            loadFile: function(from, fileId, next_fileData){
+                if (from === "files") {
+                    EXT.readFile(fileId, function (fileInfo) {
+                        // console.info(fileInfo, fileInfo.webkitRelativePath);
+
+                        RService.currentFile = fileInfo;
+                        RService.openerId = fileId;
+                        RService.openerFunc = next_fileData;
+
+                        if (RService.currentFile.name.indexOf('.kmz') >= 0)
+                            RService.opener.readAsArrayBuffer(RService.currentFile);
+                        else
+                            RService.opener.readAsText(RService.currentFile);
+                    });
+                } else {
+                    $.blockUI({ message: "Loading" });
+                    $.ajax('downloader.php', {
+                        data: {
+                            from: from,
+                            id: fileId
+                        },
+                        dataType: 'json',
+                        type: 'POST',
+                        error: function(data) {
+                            $.unblockUI();
+
+                            console.error(data);
+                            UI.showError("Load File Error");
+                        },
+                        success: function(data) {
+                            $.unblockUI();
+
+                            if (data.error)
                             {
                                 console.error(data);
                                 UI.showError(data.error);
                                 return;
                             }
-                            return;
+
+                            if (next_fileData !== null)
+                                next_fileData(data);
+
+                            //var defaultSimplify = !data.simple;
+                            //RService.processDoc(data.doc, defaultSimplify && UI.autoSimplifyTracks);
                         }
-
-                        if (next_file != null)
-                            next_file(data);
-
-                        console.log(data);
-                    }
-                });
-            },
-
-            loadFile: function(from, fileId, next_fileData){
-                $.blockUI({ message: "Loading" });
-                $.ajax('downloader.php', {
-                    data: {
-                        from: from,
-                        id: fileId
-                    },
-                    dataType: 'json',
-                    type: 'POST',
-                    error: function(data) {
-                        $.unblockUI();
-
-                        console.error(data);
-                        UI.showError("Load File Error");
-                    },
-                    success: function(data) {
-                        $.unblockUI();
-
-                        if (data.error)
-                        {
-                            console.error(data);
-                            UI.showError(data.error);
-                            return;
-                        }
-
-                        if (next_fileData !== null)
-                            next_fileData(data);
-
-                        //var defaultSimplify = !data.simple;
-                        //RService.processDoc(data.doc, defaultSimplify && UI.autoSimplifyTracks);
-                    }
-                });
+                    });
+                }
             },
 
             loadFiles: function(from, dir, next){
@@ -2412,34 +2445,10 @@
 
                 var key = 'auth' + from.ucFirst();
                 RService.directory = dir;
-                $.ajax('lister.php', {
-                    data: {
-                        from: from,
-                        dir: dir ? dir : ''
-                    },
-                    dataType: 'json',
-                    type: 'POST',
-                    error: function(data) {
-                        $.unblockUI();
 
-                        console.error(data);
-                        UI.showError("Load Files Error");
-                    },
-                    success: function(data) {
-
-                        if (data.error)
-                        {
-                            $(UI.filesBrowserId + ' .list').empty();
-                            User[key] = false;
-                            RService.directory = "";
-                            UI.filesService = null;
-
-                            console.error(data);
-                            UI.showError(data.error);
-                            return;
-                        }
-
-                        RService.fileList = data.list;
+                if (from === "files") {
+                    EXT.readDir(dir ? dir : '', function (list) {
+                        RService.fileList = list;
                         if (autoSearch) {
                             for (let i = 0; i < RService.fileList.length; i++) {
                                 if (RService.fileList[i].name === "GPX Plans") {
@@ -2449,8 +2458,48 @@
                             }
                         }
                         next();
-                    }
-                });
+                    });
+                } else {
+                    $.ajax('lister.php', {
+                        data: {
+                            from: from,
+                            dir: dir ? dir : ''
+                        },
+                        dataType: 'json',
+                        type: 'POST',
+                        error: function(data) {
+                            $.unblockUI();
+
+                            console.error(data);
+                            UI.showError("Load Files Error");
+                        },
+                        success: function(data) {
+
+                            if (data.error)
+                            {
+                                $(UI.filesBrowserId + ' .list').empty();
+                                User[key] = false;
+                                RService.directory = "";
+                                UI.filesService = null;
+
+                                console.error(data);
+                                UI.showError(data.error);
+                                return;
+                            }
+
+                            RService.fileList = data.list;
+                            if (autoSearch) {
+                                for (let i = 0; i < RService.fileList.length; i++) {
+                                    if (RService.fileList[i].name === "GPX Plans") {
+                                        RService.loadFiles(from, RService.fileList[i].id, next);
+                                        return;
+                                    }
+                                }
+                            }
+                            next();
+                        }
+                    });
+                }
             },
 
             processDoc: function(doc, simplify){
@@ -2559,13 +2608,13 @@
     </script>
 
     <script type="text/javascript">
-        var fclear = function(){
+        const fclear = function(){
             ActiveDocument.clear();
             GP.askPosition();
         };
 
         $(function() { // onload domready
-            $(window).focus(function() {
+            $(window).focus(function () {
                 document.title = "GPS Travel Maker";
             });
 
@@ -2677,28 +2726,20 @@
 
     <script type="text/javascript">
 
-        var ActiveDocument = {
-            fileIdLocal:  null,
-            fileIdGoogle: null,
-            fileIdDropbox: null,
-            fileNameLocal:  null,
-            fileNameGoogle: null,
-            fileNameDropbox: null,
+        const ActiveDocument = {
+            fileId: null,
+            fileName: null,
             fileNameDemo: null,
 
             source: 'local',
 
             isModified: false,
 
-            clear: function(){
+            clear: function () {
                 GP.clear();
 
-                ActiveDocument.fileIdLocal = null;
-                ActiveDocument.fileIdGoogle = null;
-                ActiveDocument.fileIdDropbox = null;
-                ActiveDocument.fileNameLocal = null;
-                ActiveDocument.fileNameGoogle = null;
-                ActiveDocument.fileNameDropbox = null;
+                ActiveDocument.fileId = null;
+                ActiveDocument.fileName = null;
                 ActiveDocument.fileNameDemo = null;
                 ActiveDocument.source = 'local';
 
@@ -2707,30 +2748,22 @@
                 window.history.replaceState({}, document.title, '/');
             },
 
-            serialize: function(){
+            serialize: function () {
                 return JSON.stringify({
                     data: GP.getGPSData(),
-                    fileIdLocal: ActiveDocument.fileIdLocal,
-                    fileIdGoogle: ActiveDocument.fileIdGoogle,
-                    fileIdDropbox: ActiveDocument.fileIdDropbox,
-                    fileNameLocal: ActiveDocument.fileNameLocal,
-                    fileNameGoogle: ActiveDocument.fileNameGoogle,
-                    fileNameDropbox: ActiveDocument.fileNameDropbox,
+                    fileId: ActiveDocument.fileId,
+                    fileName: ActiveDocument.fileName,
                     fileNameDemo: ActiveDocument.fileNameDemo,
                     source: ActiveDocument.source
                 });
             },
 
-            unserialize: function(value){
-                if (value && value != '' && value != null)
+            unserialize: function (value) {
+                if (value && value !== '' && value != null)
                 {
                     var obj = JSON.parse(value);
-                    ActiveDocument.fileIdLocal = obj.fileIdLocal;
-                    ActiveDocument.fileIdGoogle = obj.fileIdGoogle;
-                    ActiveDocument.fileIdDropbox = obj.fileIdDropbox;
-                    ActiveDocument.fileNameLocal = obj.fileNameLocal;
-                    ActiveDocument.fileNameGoogle = obj.fileNameGoogle;
-                    ActiveDocument.fileNameDropbox = obj.fileNameDropbox;
+                    ActiveDocument.fileId = obj.fileId;
+                    ActiveDocument.fileName = obj.fileName;
                     ActiveDocument.fileNameDemo = obj.fileNameDemo;
                     ActiveDocument.source = obj.source;
                     UI.setDocumentTitle(obj.source);
@@ -3018,6 +3051,7 @@
                 <div class="file-services">
                     <div class="btn-group btn-group-sm" role="group" style="padding: 3px 15px">
                         <a href="#" id="savePopupLocal" class="btn btn-default">Local</a>
+                        <a href="#" id="savePopupFiles" class="btn btn-default">Files</a>
                                             </div>
                 </div>
 
@@ -3065,6 +3099,7 @@
                 <div class="file-services">
                     <div class="btn-group btn-group-sm" role="group" style="padding: 3px 15px">
                         <a href="#" id="openPopupLocal" class="btn btn-default">Local</a>
+                        <a href="#" id="openPopupFiles" class="btn btn-default">Files</a>
                                             </div>
                 </div>
 

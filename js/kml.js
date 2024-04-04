@@ -313,10 +313,11 @@ KML.parse = function(fdata, _icons){
 
             for (var j = 1; j < tracks[i].rpoints.length; j++)
             {
+                segments[j - 1] = [];
                 while (tracks[i].rpoints[j] != k)
                 {
-                    if (!(segments[j - 1]))
-                        segments[j - 1] = [];
+                    //if (!(segments[j - 1]))
+                    //    segments[j - 1] = [];
                     segments[j - 1].push(tracks[i].points[k]);
                     k++;
                 }
