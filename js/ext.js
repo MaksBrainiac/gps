@@ -88,26 +88,28 @@ EXT.saveFile = function (dir, id, title, format, json, callback) {
     })().then(callback);
 };
 
-EXT.readFile = function (id, callback) {
+EXT.readFileAsync = async function (id) {
     console.info("EXT.readFile", id);
 
-    (async function () {
-        let path = id.split('/');
-        let entry = User.dirHandle;
+    let path = id.split('/');
+    let entry = User.dirHandle;
 
-        for (let i = 1; i < path.length - 1; i++) {
-            let dir = path.splice(0, i + 1).join('/');
-            if (EXT.handles[dir]) {
-                entry = EXT.handles[dir];
-            } else {
-                entry = await entry.getDirectoryHandle(path[i]);
-                EXT.handles[dir] = entry;
-            }
+    for (let i = 1; i < path.length - 1; i++) {
+        let dir = path.splice(0, i + 1).join('/');
+        if (EXT.handles[dir]) {
+            entry = EXT.handles[dir];
+        } else {
+            entry = await entry.getDirectoryHandle(path[i]);
+            EXT.handles[dir] = entry;
         }
+    }
 
-        let handle = await entry.getFileHandle(path.pop());
-        return await handle.getFile();
-    })().then(callback);
+    let handle = await entry.getFileHandle(path.pop());
+    return await handle.getFile();
+};
+
+EXT.readFile = function (id, callback) {
+    EXT.readFileAsync(id).then(callback);
 };
 
 EXT.readDir = function (dir, callback) {
@@ -144,24 +146,12 @@ EXT.readDir = function (dir, callback) {
                 ext: handle.name.split('.').pop()
             });
         }
+
+        files.sort((a, b) => -a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+
         return files;
     })().then(callback);
 };
-
-// EXT.test = function () {
-//     window.showDirectoryPicker({mode: 'readwrite'}).then(function (dirHandle) {
-//         (async function () {
-//             let files = [];
-//             for await (const fileHandle of getFilesRecursively(dirHandle)) {
-//                 files.push(fileHandle);
-//                 console.log(fileHandle);
-//             }
-//             return files;
-//         })().then((files) => {
-//             console.log(files);
-//         });
-//     });
-// };
 
 EXT.render = function (json) {
     for (const track of json.tracks) {

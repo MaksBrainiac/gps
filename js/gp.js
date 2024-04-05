@@ -1569,11 +1569,9 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
                 instance.deleteGhostMarker();
         });
         google.maps.event.addListener(marker, "dragend", function(event) {
-            if (GP.routingIsInProgress) {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                return;
-            }
+            // if (GP.routingIsInProgress) {
+            //     return false;
+            // }
             if (GP.debug) console.log('Marker-DRAG-ENG');
             instance.onMarkerChanged(marker, event.latLng, true);
             GP.dispatch("onTrackChanged", instance);
@@ -1582,12 +1580,10 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
                 instance.updateRouteLine();
         });
         google.maps.event.addListener(marker, "drag", function(event) {
-            if (GP.routingIsInProgress) {
-                event.preventDefault();
-                event.stopImmediatePropagation();
-                return;
-            }
-            ///if (GP.debug) console.log('Marker-DRAG');
+            // if (GP.routingIsInProgress) {
+            //     return false;
+            // }
+            if (GP.debug) console.log('Marker-DRAG');
             instance.onMarkerChanged(marker, event.latLng, false);
             GP.dispatch("onTrackChanged", instance);
         });
@@ -2465,12 +2461,15 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
         ghRouting.addPoint(new GHInput(this.trackPoints[index + 1].lat(), this.trackPoints[index + 1].lng()));
 
         GP.routingIsInProgress++;
+        $('#map-routing-modes').addClass('pp');
 
         var segmentInstance = this.routeSegments[index];
 
         ghRouting.doRequest()
             .then(function(json){
                 GP.routingIsInProgress--;
+                if (!GP.routingIsInProgress)
+                    $('#map-routing-modes').removeClass('pp');
 
                 // Add your own result handling here
                 if (GP.debug) console.log("ghRouting Response OK", json);
@@ -2501,6 +2500,8 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
             })
             .catch(function(err){
                 GP.routingIsInProgress--;
+                if (!GP.routingIsInProgress)
+                    $('#map-routing-modes').removeClass('pp');
                 // instance.routeSegments[index] = null;
                 delete segmentInstance.points;
                 console.error(err.message);
