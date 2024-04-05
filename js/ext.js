@@ -128,13 +128,6 @@ EXT.readDir = function (dir, callback) {
         }
 
         let files = [];
-        if (dir !== '' && dir !== '/') {
-            files.push({
-                id:  "",
-                name: "...",
-                type: "dir",
-            });
-        }
         for await (const handle of entry.values()) {
             // let idx = "hx-" + (new Date()).getTime() + Math.floor(Math.random() * 100000);
             // EXT.handles[idx] = handle;
@@ -147,7 +140,14 @@ EXT.readDir = function (dir, callback) {
             });
         }
 
-        files.sort((a, b) => -a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+        files.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+        if (dir !== '' && dir !== '/') {
+            files.unshift({
+                id:  "",
+                name: "...",
+                type: "dir",
+            });
+        }
 
         return files;
     })().then(callback);
