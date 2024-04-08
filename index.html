@@ -1868,10 +1868,10 @@
                     return false;
                 }*/
 
-                var __saveFunction;
+                let __saveFunc;
 
                 if (UI.filesService === 'local') {
-                    __saveFunction = function (){
+                    __saveFunc = function (){
                         ActiveDocument.fileId = fileName;
                         ActiveDocument.fileName = fileName;
                         ActiveDocument.source = 'local';
@@ -1886,14 +1886,14 @@
                     };
 
                     if (ActiveDocument.hasLocal(fileName)) {
-                        UI.showMessage('Replace Saved File?', 'Confirmation', __saveFunction, function (){
+                        UI.showMessage('Replace Saved File?', 'Confirmation', __saveFunc, function (){
                             UI.saveFileDialog(UI.filesService, UI.doAfterSave);
                         });
                     } else {
-                        __savefunction ();
+                        __saveFunc();
                     }
                 } else {
-                    __saveFunction = function (){
+                    __saveFunc = function (){
                         ///console.log(UI.filesService, fileId, fileName, fileFormat, RService.directory);
                         RService.doSaveFile(UI.filesService, fileId, fileName, fileFormat, RService.directory, function (file){
                             ActiveDocument.fileId = file.fileId;
@@ -1910,11 +1910,11 @@
                     };
 
                     if (fileId) {
-                        UI.showMessage('Replace Saved File?', 'Confirmation', __saveFunction, function (){
+                        UI.showMessage('Replace Saved File?', 'Confirmation', __saveFunc, function (){
                             UI.saveFileDialog(UI.filesService, UI.doAfterSave);
                         });
                     } else {
-                        __savefunction ();
+                        __saveFunc();
                     }
                 }
             },
