@@ -1,12 +1,9 @@
-if (!String.prototype.trim) {
-    String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
-}
 if (!String.prototype.stripTags) {
     String.prototype.stripTags=function(){return this.replace(/<\/?[^>]+>/gi, '');};
 }
 if (!String.prototype.ucFirst) {
     String.prototype.ucFirst = function() {
-        var str = this;
+        let str = this;
         if (str.length) {
             str = str.charAt(0).toUpperCase() + str.slice(1);
         }
@@ -14,9 +11,9 @@ if (!String.prototype.ucFirst) {
     };
 }
 
-
-function escapeHtml(text) {
-    var map = {
+function escapeHtml(text)
+{
+    const map = {
         '&': '&amp;',
         '<': '&lt;',
         '>': '&gt;',
@@ -27,22 +24,23 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
 }
 
-function basename(path, suffix) {	// Returns filename component of path
-    //
+// Returns filename component of path
+function basename(path, suffix)
+{
     // +   original by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
     // +   improved by: Ash Searle (http://hexmen.com/blog/)
     // +   improved by: Lincoln Ramsay
     // +   improved by: djmix
 
-    var b = path.replace(/^.*[\/\\]/g, '');
+    let b = path.replace(/^.*[\/\\]/g, '');
     if (typeof(suffix) == 'string' && b.substr(b.length-suffix.length) == suffix) {
         b = b.substr(0, b.length-suffix.length);
     }
     return b;
 }
 
-function urlencode(str) {
-
+function urlencode(str)
+{
     str = (str + '')
         .toString();
 
@@ -55,11 +53,35 @@ function urlencode(str) {
         .replace(/%20/g, '+');
 }
 
-var rg1=/^[^\\/:\*\?"<>\|]+$/; // forbidden characters \ / : * ? " < > |
-var rg2=/^\./; // cannot start with dot (.)
-var rg3=/^(nul|prn|con|lpt[0-9]|com[0-9])(\.|$)/i; // forbidden file names
-
 function isValidFileName(fname)
 {
+    const rg1=/^[^\\/:\*\?"<>\|]+$/; // forbidden characters \ / : * ? " < > |
+    const rg2=/^\./; // cannot start with dot (.)
+    const rg3=/^(nul|prn|con|lpt[0-9]|com[0-9])(\.|$)/i; // forbidden file names
+
     return rg1.test(fname)&&!rg2.test(fname)&&!rg3.test(fname);
+}
+
+function attachExt(title, ext)
+{
+    const format = title.split('.').pop().toLocaleUpperCase();
+    return format === ext ? title : (title + '.' + ext);
+}
+
+function toAsync(next)
+{
+  return function (...args) {
+    return new Promise((resolve, reject) => {
+      function callback(err, result) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      }
+
+      args.push(callback);
+      next.call(this, ...args);
+    });
+  };
 }

@@ -19,73 +19,72 @@ const EXT = {
 
 EXT.saveFile = function (dir, id, title, format, json, callback) {
     console.info("EXT.saveFile", dir, id);
+    EXT.saveFileAsync().then(callback);
+};
 
-    (async function () {
+EXT.saveFileAsync = async function (dir, id, title, format, json) {
+    if (id) {
+        format = id.split("/").pop().split('.').pop().toLocaleUpperCase();
+    }
 
-        if (id) {
-            format = id.split("/").pop().split('.').pop().toLocaleUpperCase();
+    let blob = EXT.serialize(json, format);
+    let fileHandle = null;
+
+    if (id) {
+        let path = id.split('/');
+        let entry = User.dirHandle;
+
+        for (let i = 1; i < path.length - 1; i++) {
+            let dirx = path.splice(0, i + 1).join('/');
+            if (EXT.handles[dirx]) {
+                entry = EXT.handles[dirx];
+            } else {
+                entry = await entry.getDirectoryHandle(path[i]);
+                EXT.handles[dirx] = entry;
+            }
         }
 
-        let blob = EXT.serialize(json, format);
-        let fileHandle = null;
+        fileHandle = await entry.getFileHandle(path.pop());
+    } else {
+        let path = dir.split('/');
+        let entry = User.dirHandle;
 
-        if (id) {
-            let path = id.split('/');
-            let entry = User.dirHandle;
-
-            for (let i = 1; i < path.length - 1; i++) {
-                let dirx = path.splice(0, i + 1).join('/');
-                if (EXT.handles[dirx]) {
-                    entry = EXT.handles[dirx];
-                } else {
-                    entry = await entry.getDirectoryHandle(path[i]);
-                    EXT.handles[dirx] = entry;
-                }
+        for (let i = 1; i < path.length; i++) {
+            let dirx = path.splice(0, i + 1).join('/');
+            if (EXT.handles[dirx]) {
+                entry = EXT.handles[dirx];
+            } else {
+                entry = await entry.getDirectoryHandle(path[i]);
+                EXT.handles[dirx] = entry;
             }
-
-            fileHandle = await entry.getFileHandle(path.pop());
-        } else {
-            let path = dir.split('/');
-            let entry = User.dirHandle;
-
-            for (let i = 1; i < path.length; i++) {
-                let dirx = path.splice(0, i + 1).join('/');
-                if (EXT.handles[dirx]) {
-                    entry = EXT.handles[dirx];
-                } else {
-                    entry = await entry.getDirectoryHandle(path[i]);
-                    EXT.handles[dirx] = entry;
-                }
-            }
-
-            let fileName = title + '.' + format.toLocaleLowerCase();
-            try {
-                let handle = await entry.getFileHandle(fileName);
-                let fileInfo = await handle.getFile();
-                throw new Error('File already exists');
-            } catch (e) {
-                if (e instanceof DOMException && e.name === "NotFoundError") {
-                    // OK!
-                } else {
-                    throw e; // let others bubble up
-                }
-            }
-
-            // Create a FileSystemWritableFileStream to write to.
-            fileHandle = await entry.getFileHandle(fileName, { create: true });
-            id = dir + '/' + fileName;
         }
 
-        const writable = await fileHandle.createWritable();
-        await writable.write(blob);
-        await writable.close();
+        let fileName = title + '.' + format.toLocaleLowerCase();
+        try {
+            let handle = await entry.getFileHandle(fileName);
+            let fileInfo = await handle.getFile();
+            throw new Error('File already exists');
+        } catch (e) {
+            if (e instanceof DOMException && e.name === "NotFoundError") {
+                // OK!
+            } else {
+                throw e; // let others bubble up
+            }
+        }
 
-        return {
-            fileId: id,
-            title: title,
-        };
+        // Create a FileSystemWritableFileStream to write to.
+        fileHandle = await entry.getFileHandle(fileName, { create: true });
+        id = dir + '/' + fileName;
+    }
 
-    })().then(callback);
+    const writable = await fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+
+    return {
+        fileId: id,
+        title: title,
+    };
 };
 
 EXT.readFileAsync = async function (id) {
@@ -112,45 +111,47 @@ EXT.readFile = function (id, callback) {
     EXT.readFileAsync(id).then(callback);
 };
 
-EXT.readDir = function (dir, callback) {
-    (async function () {
-        let entry = null;
-        if (dir === '' || dir === '/') {
-            // dir = '/';
-            entry = User.dirHandle;
+EXT.readDirAsync = async function (dir) {
+    let entry = null;
+    if (dir === '' || dir === '/') {
+        // dir = '/';
+        entry = User.dirHandle;
+    } else {
+        if (EXT.handles[dir]) {
+            entry = EXT.handles[dir];
         } else {
-            if (EXT.handles[dir]) {
-                entry = EXT.handles[dir];
-            } else {
-                entry = await User.dirHandle.getDirectoryHandle(dir.substring(1));
-                EXT.handles[dir] = entry;
-            }
+            entry = await User.dirHandle.getDirectoryHandle(dir.substring(1));
+            EXT.handles[dir] = entry;
         }
+    }
 
-        let files = [];
-        for await (const handle of entry.values()) {
-            // let idx = "hx-" + (new Date()).getTime() + Math.floor(Math.random() * 100000);
-            // EXT.handles[idx] = handle;
-            // console.log(handle);
-            files.push({
-                id:  dir + '/' + handle.name,
-                name: handle.name,
-                type: handle.kind === "file" ? "file" : "dir",
-                ext: handle.name.split('.').pop()
-            });
-        }
+    let files = [];
+    for await (const handle of entry.values()) {
+        // let idx = "hx-" + (new Date()).getTime() + Math.floor(Math.random() * 100000);
+        // EXT.handles[idx] = handle;
+        // console.log(handle);
+        files.push({
+            id:  dir + '/' + handle.name,
+            name: handle.name,
+            type: handle.kind === "file" ? "file" : "dir",
+            ext: handle.name.split('.').pop()
+        });
+    }
 
-        files.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
-        if (dir !== '' && dir !== '/') {
-            files.unshift({
-                id:  "",
-                name: "...",
-                type: "dir",
-            });
-        }
+    files.sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+    if (dir !== '' && dir !== '/') {
+        files.unshift({
+            id:  "",
+            name: "...",
+            type: "dir",
+        });
+    }
 
-        return files;
-    })().then(callback);
+    return files;
+};
+
+EXT.readDir = function (dir, callback) {
+    EXT.readDirAsync().then(callback);
 };
 
 EXT.render = function (json) {
@@ -229,8 +230,14 @@ EXT.save = function (json, format, name) {
             return;
     }
 
-    if (!name)
+    if (!name) {
         name = 'track-' + (new Date()).getTime();
+    } else {
+        let aName = name.split('.');
+        if (aName.length > 1 && aName[aName.length-1] !== "")
+            aName.pop();
+        name = aName.join('.');
+    }
 
     let tempLink = document.createElement("a");
     tempLink.setAttribute('href', URL.createObjectURL(taBlob));
