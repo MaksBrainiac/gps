@@ -2072,7 +2072,7 @@
                 } else if (fileContent.includes('<kml xmlns="')) {
                     fileData.doc = KML.parse(fileContent, GP.googleIcons);
                 }
-                if (fileData.doc.description.includes('ツ'))
+                if (fileData.doc.description && fileData.doc.description.includes('ツ'))
                     fileData.simple = true;
 
                 return fileData;
