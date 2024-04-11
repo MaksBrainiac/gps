@@ -31,35 +31,16 @@ EXT.saveFileAsync = async function (dir, id, title, format, json) {
     let fileHandle = null;
 
     if (id) {
-        let path = id.split('/');
-        let entry = User.dirHandle;
+        let pathArr = id.split('/');
+        let fileName = pathArr.pop();
+        let path = pathArr.join('/');
 
-        for (let i = 1; i < path.length - 1; i++) {
-            let dirx = path.splice(0, i + 1).join('/');
-            if (EXT.handles[dirx]) {
-                entry = EXT.handles[dirx];
-            } else {
-                entry = await entry.getDirectoryHandle(path[i]);
-                EXT.handles[dirx] = entry;
-            }
-        }
-
-        fileHandle = await entry.getFileHandle(path.pop());
+        let entry = await EXT.getDirEntryAsync(path);
+        fileHandle = await entry.getFileHandle(fileName);
     } else {
-        let path = dir.split('/');
-        let entry = User.dirHandle;
-
-        for (let i = 1; i < path.length; i++) {
-            let dirx = path.splice(0, i + 1).join('/');
-            if (EXT.handles[dirx]) {
-                entry = EXT.handles[dirx];
-            } else {
-                entry = await entry.getDirectoryHandle(path[i]);
-                EXT.handles[dirx] = entry;
-            }
-        }
-
+        let entry = await EXT.getDirEntryAsync(dir);
         let fileName = title + '.' + format.toLocaleLowerCase();
+
         try {
             let handle = await entry.getFileHandle(fileName);
             let fileInfo = await handle.getFile();
@@ -87,23 +68,32 @@ EXT.saveFileAsync = async function (dir, id, title, format, json) {
     };
 };
 
+EXT.getDirEntryAsync = async function (path) {
+    if (path === '' || path === '/') {
+        return User.dirHandle;
+    }
+
+    if (EXT.handles[path]) {
+        return EXT.handles[path];
+    }
+
+    let dirArr = path.split('/');
+    let dName = dirArr.pop();
+    let dPath = dirArr.join('/');
+
+    let entry = await EXT.getDirEntryAsync(dPath);
+    return await entry.getDirectoryHandle(dName);
+}
+
 EXT.readFileAsync = async function (id) {
     console.info("EXT.readFile", id);
 
-    let path = id.split('/');
-    let entry = User.dirHandle;
+    let pathArr = id.split('/');
+    let fileName = pathArr.pop();
+    let path = pathArr.join('/');
 
-    for (let i = 1; i < path.length - 1; i++) {
-        let dir = path.splice(0, i + 1).join('/');
-        if (EXT.handles[dir]) {
-            entry = EXT.handles[dir];
-        } else {
-            entry = await entry.getDirectoryHandle(path[i]);
-            EXT.handles[dir] = entry;
-        }
-    }
-
-    let handle = await entry.getFileHandle(path.pop());
+    let entry = await EXT.getDirEntryAsync(path);
+    let handle = await entry.getFileHandle(fileName);
     return await handle.getFile();
 };
 
@@ -112,19 +102,7 @@ EXT.readFile = function (id, callback) {
 };
 
 EXT.readDirAsync = async function (dir) {
-    let entry = null;
-    if (dir === '' || dir === '/') {
-        // dir = '/';
-        entry = User.dirHandle;
-    } else {
-        if (EXT.handles[dir]) {
-            entry = EXT.handles[dir];
-        } else {
-            entry = await User.dirHandle.getDirectoryHandle(dir.substring(1));
-            EXT.handles[dir] = entry;
-        }
-    }
-
+    let entry = await EXT.getDirEntryAsync(dir);
     let files = [];
     for await (const handle of entry.values()) {
         // let idx = "hx-" + (new Date()).getTime() + Math.floor(Math.random() * 100000);
