@@ -27,7 +27,7 @@ EXT.saveFileAsync = async function (dir, id, title, format, json) {
         format = id.split("/").pop().split('.').pop().toLocaleUpperCase();
     }
 
-    let blob = EXT.serialize(json, format);
+    let blob = EXT.serialize(json, format, false);
     let fileHandle = null;
 
     if (id) {
@@ -152,17 +152,20 @@ EXT.render = function (json) {
     return json;
 };
 
-EXT.serialize = function (json, format) {
+EXT.serialize = function (json, format, render) {
     let mime = null;
     let fileData = null;
     let taBlob = null;
+
+    if (render)
+        json = EXT.render(json);
 
     switch (format) {
         case "KML":
         case "KMZ":
             let ext = format.toLocaleLowerCase();
             mime = ext === 'kml' ? 'application/vnd.google-earth.kml+xml' : 'application/vnd.google-earth.kmz';
-            fileData = KML.convert(EXT.render(json));
+            fileData = KML.convert(json);
             if (ext === "kmz") {
                 let zip = new JSZip();
                 zip.file("doc.kml", fileData);
@@ -175,7 +178,7 @@ EXT.serialize = function (json, format) {
         case "GPX":
         case "GPXtg":
             mime = 'application/gpx+xml';
-            fileData = GPX.convert(EXT.render(json), format);
+            fileData = GPX.convert(json, format);
             break;
         default:
             UI.showError("Unknown format!");
@@ -188,7 +191,7 @@ EXT.serialize = function (json, format) {
 };
 
 EXT.save = function (json, format, name) {
-    let taBlob = EXT.serialize(json, format);
+    let taBlob = EXT.serialize(json, format, true);
 
     let ext = null;
     switch (format) {
