@@ -46,12 +46,12 @@ function AppMultiAction(list)
     this.list = list;
 
     this.execute = function(){
-        for (var i = 0; i++; i < this.list.length)
+        for (let i = 0; i++; i < this.list.length)
             this.list[i].execute();
         return true;
     };
     this.rollback = function(){
-        for (var i = this.list.length - 1; i--; i >= 0)
+        for (let i = this.list.length - 1; i--; i >= 0)
             this.list[i].rollback();
         return true;
     };
@@ -188,21 +188,21 @@ GP.hideAllMarkers = function(){
 };
 GP.getTracks = function(){
     var result = [];
-    for (var i = 0; i < GP._gpTracks.length; i++)
+    for (let i = 0; i < GP._gpTracks.length; i++)
         result.push(GP._gpTracks[i]);
     return result;
 };
 GP.getPoints = function(){
     var result = [];
-    for (var i = 0; i < GP._gpPoints.length; i++)
+    for (let i = 0; i < GP._gpPoints.length; i++)
         result.push(GP._gpPoints[i]);
     return result;
 };
 GP.getCollection = function(){
     var result = [];
-    for (var i = 0; i < GP._gpTracks.length; i++)
+    for (let i = 0; i < GP._gpTracks.length; i++)
         result.push(GP._gpTracks[i]);
-    for (var i = 0; i < GP._gpPoints.length; i++)
+    for (let i = 0; i < GP._gpPoints.length; i++)
         result.push(GP._gpPoints[i]);
     return result;
 };
@@ -424,7 +424,7 @@ GP.geoNavComplete = function(location){
 };
 
 GP.initialize = function(){
-    for (var k in GP.icons) if (GP.icons.hasOwnProperty(k))
+    for (let k in GP.icons) if (GP.icons.hasOwnProperty(k))
         GP.pointIcons[k] = {
             anchor:	new google.maps.Point(16, 36),
             scaledSize:	new google.maps.Size(32, 37),
@@ -526,11 +526,11 @@ GP.initialize = function(){
     Maps.addSupport(GP._map);
 
     if (GP.__tracks)
-        for (var i = 0; i < GP.__tracks.length; i++)
+        for (let i = 0; i < GP.__tracks.length; i++)
         {
             var pointList = [];
             var points = GP.__tracks[i].points;
-            for (var j = 0; j < points.length; j++)
+            for (let j = 0; j < points.length; j++)
                 pointList.push(new google.maps.LatLng(points[j][0], points[j][1]));
 
             GP._gpTracks[i] = new GPTrack(i, GP.__tracks[i].name, GP.__tracks[i].description, pointList, GP._map);
@@ -765,7 +765,7 @@ GP.setEditMode = function(mode){
     if (GP._activeTrack && mode !== "DEMO")
         GP._activeTrack.setEditMode(GP.editMode);
 
-    /*for (var i = 0; i < GP._gpTracks.length; i++)
+    /*for (let i = 0; i < GP._gpTracks.length; i++)
     {
         if (GP._gpTracks[i] != GP._activeTrack)
         {
@@ -777,7 +777,7 @@ GP.setEditMode = function(mode){
     }*/
 
     //if (mode == "")
-    for (var i = 0; i < GP._gpTracks.length; i++)
+    for (let i = 0; i < GP._gpTracks.length; i++)
     {
         if (GP._gpTracks[i] != GP._activeTrack)
         {
@@ -793,7 +793,7 @@ GP.setEditMode = function(mode){
 };
 
 GP.getPoint = function(index){
-    for (var i = 0; i < GP._gpPoints.length; i++)
+    for (let i = 0; i < GP._gpPoints.length; i++)
     {
         if (GP._gpPoints[i].id == index)
             return GP._gpPoints[i];
@@ -802,7 +802,7 @@ GP.getPoint = function(index){
 };
 
 GP.getTrack = function(index){
-    for (var i = 0; i < GP._gpTracks.length; i++)
+    for (let i = 0; i < GP._gpTracks.length; i++)
     {
         if (GP._gpTracks[i].id == index)
             return GP._gpTracks[i];
@@ -838,11 +838,11 @@ GP.setActivePoint = function(index){
 };
 
 GP.disablePoints = function(){
-    for (var i = 0; i< GP._gpPoints.length; i++)
+    for (let i = 0; i< GP._gpPoints.length; i++)
         GP._gpPoints[i].disable();
 };
 GP.enablePoints = function(){
-    for (var i = 0; i< GP._gpPoints.length; i++)
+    for (let i = 0; i< GP._gpPoints.length; i++)
         GP._gpPoints[i].enable();
 };
 
@@ -920,7 +920,7 @@ GP.makeCopy = function(){
 
     var points = [];
     var segments = null;
-    for (var i = 0; i < GP._activeTrack.trackPoints.length; i++)
+    for (let i = 0; i < GP._activeTrack.trackPoints.length; i++)
     {
         points.push(
             new google.maps.LatLng(
@@ -933,13 +933,13 @@ GP.makeCopy = function(){
     if (GP._activeTrack.type == "ROUTE")
     {
         segments = [];
-        for (var i = 0; i < GP._activeTrack.routeSegments.length; i++)
+        for (let i = 0; i < GP._activeTrack.routeSegments.length; i++)
         {
             var segment = GP._activeTrack.getSegmentAt(i);
             if (segment)
             {
                 segments[i] = [];
-                for (var j = 0; j < segment.length; j++)
+                for (let j = 0; j < segment.length; j++)
                 {
                     segments[i].push(
                         new google.maps.LatLng(
@@ -1017,10 +1017,10 @@ GP.goSplit = function(){
 GP.clear = function(){
     GP.setEditMode("NONE");
 
-    for (var i = GP._gpTracks.length - 1; i >= 0; i--)
+    for (let i = GP._gpTracks.length - 1; i >= 0; i--)
         GP.deleteTrack(GP._gpTracks[i]);
 
-    for (i = GP._gpPoints.length - 1; i >= 0; i--)
+    for (let i = GP._gpPoints.length - 1; i >= 0; i--)
         GP.deletePoint(GP._gpPoints[i]);
 
     GP.historyClear();
@@ -1268,7 +1268,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
 
         this.trackPoints = points;
         if (segments) {
-            for (var i = 0; i < points.length; i++)
+            for (let i = 0; i < points.length; i++)
             {
                 if (i <= segments.length - 1)
                     this.routeSegments[i] = {points: segments[i]};
@@ -1278,7 +1278,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
         }
 
         var list = [];
-        for (var i = 0; i < points.length; i++)
+        for (let i = 0; i < points.length; i++)
             list.push(points[i]);
 
         if (list.length > 0)
@@ -1343,7 +1343,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
 
         var pointList = this.type === "ROUTE" ? this.trackLine.getPath().getArray() : this.trackPoints;
 
-        for (var i = 0; i < pointList.length; i++) {
+        for (let i = 0; i < pointList.length; i++) {
             if (point)
                 d += dx = (google.maps.geometry.spherical.computeDistanceBetween(point, pointList[i]) / 1000);
             point0 = point;
@@ -1432,7 +1432,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
     this.show = function(){
         if (this.trackLine)
             this.trackLine.setMap(this.map);
-        for (var i = 0; i < this.markers.length; i++)
+        for (let i = 0; i < this.markers.length; i++)
             this.markers[i].setMap(this.map);
     };
     this.hide = function(){
@@ -1440,7 +1440,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
         this.colorback();
         if (this.trackLine)
             this.trackLine.setMap(null);
-        for (var i = 0; i < this.markers.length; i++)
+        for (let i = 0; i < this.markers.length; i++)
             this.markers[i].setMap(null);
     };
 
@@ -1454,7 +1454,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
             this.ghostMarker.setMap(null);
         this.ghostMarker = null;
 
-        for (var i = 0; i < this.markers.length; i++)
+        for (let i = 0; i < this.markers.length; i++)
             this.markers[i].setMap(null);
         this.markers = [];
 
@@ -1625,7 +1625,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
             {
                 this.pauseUpdate();
 
-                for (var i = 0; i <= track.trackPoints.length; i++)
+                for (let i = 0; i <= track.trackPoints.length; i++)
                     this.addPoint(
                         track.trackPoints[i],
                         this.editMode == "END" ? track.getSegmentAt(i) : null
@@ -1635,7 +1635,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
             }
             else
             {
-                for (var i = 0; i <= track.trackPoints.length; i++)
+                for (let i = 0; i <= track.trackPoints.length; i++)
                     this.addPoint(track.trackPoints[i]);
             }
         }
@@ -1645,7 +1645,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
             {
                 this.pauseUpdate();
 
-                for (var i = track.trackPoints.length - 1; i >= 0; i--)
+                for (let i = track.trackPoints.length - 1; i >= 0; i--)
                     this.addPoint(
                         track.trackPoints[i],
                         this.editMode == "START" ? track.getSegmentAt(i) : null
@@ -1655,7 +1655,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
             }
             else
             {
-                for (var i = track.trackPoints.length - 1; i >= 0; i--)
+                for (let i = track.trackPoints.length - 1; i >= 0; i--)
                     this.addPoint(track.trackPoints[i]);
             }
         }
@@ -1878,7 +1878,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
                 else
                 {
                     var markers = 0;
-                    for (var i = 0; i < k - 1/*this.trackPoints.length - 1*/; i++) {
+                    for (let i = 0; i < k - 1/*this.trackPoints.length - 1*/; i++) {
                         var segment = this.getSegmentAt(i);
                         //if (k > markers)
                         //{
@@ -2033,7 +2033,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
 
         var dx = 0;
 
-        for (var i = 1; i < list.length; i++)
+        for (let i = 1; i < list.length; i++)
         {
             dx = this.__checkPair(list[i-1], list[i], point);
             if (dx >= 0 && dx < bestDx)
@@ -2071,7 +2071,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
         {
             var markers = 0;
             trackIndex = 0;
-            for (var k = 0; k < this.trackPoints.length - 1; k++)
+            for (let k = 0; k < this.trackPoints.length - 1; k++)
             {
                 console.warn("Search", index, "K" + k, markers);
                 if (index > markers)
@@ -2165,7 +2165,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
 
         this.editMode = "NONE";
 
-        for (var i = e - 1; i >= s + 1; i--)
+        for (let i = e - 1; i >= s + 1; i--)
             this.onMarkerDelete(this.markers[i]);
 
         this.cutPointStart = null;
@@ -2205,10 +2205,10 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
 
         this.editMode = "NONE";
 
-        for (var i = this.markers.length; i >= e + 1; i--)
+        for (let i = this.markers.length; i >= e + 1; i--)
             this.onMarkerDelete(this.markers[i]);
 
-        for (var i = s - 1; i >= 0; i--)
+        for (let i = s - 1; i >= 0; i--)
             this.onMarkerDelete(this.markers[i]);
 
         this.cutPointStart = null;
@@ -2226,17 +2226,17 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
 
         var points = [];
         var segments = [];
-        for (var i = index; i < this.trackPoints.length; i++)
+        for (let i = index; i < this.trackPoints.length; i++)
             points.push(this.trackPoints[i]);
 
         if (this.type == "ROUTE")
         {
-            for (var i = index; i < this.trackPoints.length; i++) {
+            for (let i = index; i < this.trackPoints.length; i++) {
                 var segment = this.getSegmentAt(i);
                 segments.push(segment || []);
             }
 
-            for (var i = this.trackPoints.length - 1; i >= index; i--)
+            for (let i = this.trackPoints.length - 1; i >= index; i--)
                 this.markers[i].setMap(null);
 
             this.trackPoints.length = index;
@@ -2248,7 +2248,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
         }
         else
         {
-            for (var i = this.trackPoints.length - 1; i >= index; i--)
+            for (let i = this.trackPoints.length - 1; i >= index; i--)
             {
                 this.trackLine.getPath().removeAt(i);
                 this.markers[i].setMap(null);
@@ -2376,7 +2376,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
         if (this.__routingPaused)
             return;
 
-        for (var i = 0; i < this.trackPoints.length - 1; i++)
+        for (let i = 0; i < this.trackPoints.length - 1; i++)
         {
             if (this.routeSegments[i] == null || !this.routeSegments[i].points)
             {
@@ -2394,7 +2394,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
 
         if (GP.debug == 2) console.info("Render Route", this.trackPoints, this.routeSegments);
 
-        for (var i = 0; i < this.trackPoints.length; i++)
+        for (let i = 0; i < this.trackPoints.length; i++)
         {
             this.tPath.push(this.trackPoints[i]);
 
@@ -2405,7 +2405,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
             {
                 if (GP.debug == 2) console.info(" -> SEGMENT", i, this.routeSegments[i]);
 
-                for (var j = 0; j < segment.length; j++)
+                for (let j = 0; j < segment.length; j++)
                     this.tPath.push(segment[j]);
             }
         }
@@ -2461,7 +2461,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
         ghRouting.addPoint(new GHInput(this.trackPoints[index + 1].lat(), this.trackPoints[index + 1].lng()));
 
         GP.routingIsInProgress++;
-        $('#map-routing-modes').addClass('pp');
+        GP.dispatch("onRoutingStarted");
 
         var segmentInstance = this.routeSegments[index];
 
@@ -2469,13 +2469,13 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
             .then(function(json){
                 GP.routingIsInProgress--;
                 if (!GP.routingIsInProgress)
-                    $('#map-routing-modes').removeClass('pp');
+                    GP.dispatch("onRoutingEnded");
 
                 // Add your own result handling here
                 if (GP.debug) console.log("ghRouting Response OK", json);
 
                 var routeDistance = 0;
-                for (var i = 0; i < json.paths.length; i++) {
+                for (let i = 0; i < json.paths.length; i++) {
                     routeDistance += json.paths[i].distance;
                 }
                 if (GP.debug) console.log("LvR", lineDistance, routeDistance);
@@ -2484,8 +2484,8 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
                 } else*/ {
                     // instance.routeSegments[index] = [];
                     segmentInstance.points = [];
-                    for (var i = 0; i < json.paths.length; i++) {
-                        for (var j = 1, l = json.paths[i].points.coordinates.length - 1; j < l; j++) {
+                    for (let i = 0; i < json.paths.length; i++) {
+                        for (let j = 1, l = json.paths[i].points.coordinates.length - 1; j < l; j++) {
                             // instance.routeSegments[index].push(
                             segmentInstance.points.push(
                                 new google.maps.LatLng(
@@ -2695,11 +2695,11 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
         {
             if (!hasFullMarkers || this.markers.length === 0)
             {
-                for (var i = 0; i < this.markers.length; i++)
+                for (let i = 0; i < this.markers.length; i++)
                     this.markers[i].setMap(null);
                 this.markers = [];
 
-                for (i = 0; i < this.trackPoints.length; i++)
+                for (let i = 0; i < this.trackPoints.length; i++)
                 {
                     var marker = this.getNewMarker(this.trackPoints[i]);
                     this.markers.push(marker);
@@ -2718,7 +2718,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
             // No Markers!!!
             if (this.markers.length > 0)
             {
-                for (i = 0; i < this.markers.length; i++)
+                for (let i = 0; i < this.markers.length; i++)
                     this.markers[i].setMap(null);
                 this.markers = [];
             }
@@ -2736,7 +2736,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
         {
             if (hasFullMarkers || this.markers.length == 0)
             {
-                for (var i = 0; i < this.markers.length; i++)
+                for (let i = 0; i < this.markers.length; i++)
                     this.markers[i].setMap(null);
                 this.markers = [];
 
@@ -2749,7 +2749,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
         }*/
 
         //var canDrag = ["NONE"].indexOf(mode) >= 0;
-        //for (var i = 1; i < this.markers.length - 1; i++)
+        //for (let i = 1; i < this.markers.length - 1; i++)
         //    this.markers[i].setDraggable(canDrag);
     };
 
@@ -2821,7 +2821,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
 
             // simplify
             var rawPoints = [];
-            for (var i = 0; i < this.trackPoints.length; i++) {
+            for (let i = 0; i < this.trackPoints.length; i++) {
                 rawPoints.push({
                     x: this.trackPoints[i].lat(),
                     y: this.trackPoints[i].lng(),
@@ -2832,7 +2832,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
             var points = simplifyPath(rawPoints, 0.00010);
 
             this.trackPoints = [];
-            for (var j = 0; j < points.length; j++) {
+            for (let j = 0; j < points.length; j++) {
                 var pp = new google.maps.LatLng(points[j].x, points[j].y);
                 pp.z = points[j].z;
                 pp.time = points[j].time;
@@ -2901,7 +2901,7 @@ function GPTrack(id, name, description, points, map, style, type, visible, block
         else
         {
             var list = [];
-            for (var i = 0; i < points.length; i++)
+            for (let i = 0; i < points.length; i++)
                 list.push(points[i]);
             this.trackLine.setPath(list);
         }
@@ -3032,7 +3032,7 @@ GP.getBoundsA = function(objList){
     if (objList.length == 0)
         return null;
 
-    for (var t = 0; t < objList.length; t++)
+    for (let t = 0; t < objList.length; t++)
     {
         var list;
 
@@ -3049,7 +3049,7 @@ GP.getBoundsA = function(objList){
             list = objList[t];
         }
 
-        for (var i = 0; i < list.length; i++)
+        for (let i = 0; i < list.length; i++)
         {
             lat0 = lat0 === null ? list[i].lat() : Math.min(lat0, list[i].lat());
             lat1 = lat1 === null ? list[i].lat() : Math.max(lat1, list[i].lat());

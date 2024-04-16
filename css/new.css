@@ -1,0 +1,101 @@
+html, body {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+
+    font-size: 87.5%; /* font-size: 14px; 1rem = 14px; */
+}
+body.dragging, body.dragging * {
+    cursor: move !important;
+}
+
+.all {
+    height: 100%;
+    /*border: 5px solid white; */
+}
+
+.map {
+    height: 100%;
+    background: yellow;
+}
+
+.map:-webkit-full-screen {
+    width:100%;
+    height:100%;
+}
+.map:-moz-full-screen {
+    width:100%;
+    height:100%;
+}
+.map:-ms-fullscreen {
+    width:100%;
+    height:100%;
+}
+.map:fullscreen {
+    width:100%;
+    height:100%;
+}
+
+
+
+
+.dragover {
+
+}
+.dragel {
+    display: none;
+    border: 5px dashed greenyellow;
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100%;
+    z-index: 20000000;
+    pointer-events: none;
+}
+.dragover .dragel {
+    display: block;
+}
+
+.fileInfo {
+    font-weight: bold;
+}
+.fileInfo img {
+    width: 16px;
+    height: 16px;
+}
+
+
+
+.loader-routing {
+    width: 18px;
+    height: 24px;
+    display: grid;
+}
+.loader-routing:before,
+.loader-routing:after {
+  content: "";
+  grid-area: 1/1;
+  --c:no-repeat linear-gradient(#FFFFFF 0 0);
+  background: var(--c), var(--c), var(--c);
+  animation: l16-1 1.5s infinite linear, l16-2 1.5s infinite linear;
+  transform: scale(var(--s,1)) translate(3px,-3px);
+}
+.loader-routing:after {
+  --s:-1;
+}
+@keyframes l16-1 {
+  0%,
+  3%    {background-size: 0    4px,4px 0   ,0    4px}
+  16.67%{background-size: 100% 4px,4px 0   ,0    4px}
+  33.33%{background-size: 100% 4px,4px 100%,0    4px}
+  46%,
+  54%   {background-size: 100% 4px,4px 100%,100% 4px}
+  66.67%{background-size: 0    4px,4px 100%,100% 4px}
+  83.33%{background-size: 0    4px,4px 0   ,100% 4px}
+  96%,
+  100%  {background-size: 0    4px,4px 0   ,0    4px}
+}
+@keyframes l16-2 {
+  0%,49.9%{background-position: 0    0,100% 0   ,100% 100%}
+  50%,100%{background-position: 100% 0,100% 100%,0    100%}
+}

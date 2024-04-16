@@ -1,6 +1,86 @@
-.all {
-    /*border: 5px solid white; */
+html, body {
+    height: 100%;
+    overflow: hidden;
 }
+.all {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.map {
+    width: 100%; /*1000px;*/
+    height: 100%;
+    background-color: #9bc0ff;
+}
+.map:-webkit-full-screen {
+    width:100%;
+    height:100%;
+}
+.map:-moz-full-screen {
+    width:100%;
+    height:100%;
+}
+.map:-ms-fullscreen {
+    width:100%;
+    height:100%;
+}
+.map:fullscreen {
+    width:100%;
+    height:100%;
+}
+
+.top-line {
+    flex-grow: 0;
+    display: flex;
+}
+.mid-line {
+    flex-grow: 1;
+    display: flex;
+    align-items: stretch;
+}
+.map-panel {
+    flex-grow: 1;
+}
+.right-panel {
+    flex-grow: 0;
+    width: 440px;
+    padding-left: 20px;
+    padding-right: 20px;
+    display: flex;
+    flex-direction: column;
+}
+.map-container {
+    display: flex;
+    flex-direction: column;
+}
+.map-buttons {
+    flex-grow: 0;
+}
+.map-wrapper {
+    flex-grow: 1;
+}
+.position {
+    flex-grow: 0;
+}
+
+.track-buttons {
+    height: 145px;
+    flex-grow: 0;
+}
+.controls {
+    flex-grow: 1;
+    position: relative;
+}
+.contents {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 20px;
+    overflow: auto;
+}
+
 .dragover {
 
 }
@@ -17,9 +97,6 @@
 .dragover .dragel {
     display: block;
 }
-.map {
-
-}
 
 .maptypes {
     margin-bottom: 4px;
@@ -27,14 +104,7 @@
 .btn-list {
     margin-bottom: 4px;
 }
-.controls {
-    /*padding-left: 20px;*/
-}
-.contents {
-    width: 400px;
-    height: 690px;
-    overflow: auto;
-}
+
 .points {
 
 }
@@ -334,28 +404,6 @@ body.dragging, body.dragging * {
     box-shadow:         1px 1px 3px 0px rgba(50, 50, 50, 0.75);
 }
 
-.map {
-    width: 100%; /*1000px;*/
-    height: 800px;
-    background-color: #9bc0ff;
-}
-
-.map:-webkit-full-screen {
-    width:100%;
-    height:100%;
-}
-.map:-moz-full-screen {
-    width:100%;
-    height:100%;
-}
-.map:-ms-fullscreen {
-    width:100%;
-    height:100%;
-}
-.map:fullscreen {
-    width:100%;
-    height:100%;
-}
 
 .fileInfo {
     margin-bottom: 8px;
@@ -368,6 +416,7 @@ body.dragging, body.dragging * {
 }
 .navbar {
     margin-bottom: 1px;
+    flex-grow: 0;
 }
 #panel {
     padding-top: 4px;
@@ -382,17 +431,6 @@ body.dragging, body.dragging * {
     border-bottom: 1px solid #e5e5e5;
 }
 
-.map-panel {
-    margin-right: 440px;
-}
-.right-panel {
-    float: right;
-    width: 420px;
-    padding-right: 20px;
-}
-.limited1400 {
-    max-width: 1440px;
-}
 .label-inverse {
     background-color: black;
 }
