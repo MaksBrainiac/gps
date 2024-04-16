@@ -1580,6 +1580,12 @@
                 $container.attr('id', 'track' + track.id);
                 $container.html(UI.TRACK_HTML_ITEM_TEMPLATE);
 
+                $container.data('toggle', 'tooltip');
+                $container.data('placement', 'left');
+                $container.data('container', 'body');
+                $container.attr('title', '');
+                $container.tooltip();
+
                 if (index === 0)
                     $('#tracks').prepend($container);
                 else
@@ -1607,9 +1613,11 @@
                 $container.removeClass('locked');
             }
 
+            const dist = track.getEditableLength();
+
             $container.find('a.link').text(track.name);
-            $container.find('span.length').text(track.getEditableLength()).attr('title', track.trackPoints.length + ' points');
-            ////console.log(this.getEditableLength());
+            $container.find('span.length').text(dist).attr('title', track.trackPoints.length + ' points');
+            $container.attr('data-original-title', dist + ' km');
             $container.find('.color').css('background-color', track.style.color);
 
             $container.removeClass('route');
