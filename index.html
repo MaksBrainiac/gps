@@ -1564,6 +1564,7 @@
 
         onTrackDeleted: function (track) {
             $('#track' + track.id).remove();
+            $('.tooltip').remove();
         },
 
         doRenderTrack: function (track) {
@@ -2279,6 +2280,7 @@
         },
 
         newDocument: function () {
+            $('.tooltip').remove();
             ActiveDocument.clear();
             GP.askPosition();
         },
