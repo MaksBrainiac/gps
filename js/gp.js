@@ -342,7 +342,9 @@ GP.icons = {
     'waterdrop':    'waterdrop.png',        // http://mapicons.nicolasmollet.com/markers/nature/natural-marvels/water-source/?custom_color=7193d6
     'skull':        'skull.png',            // http://mapicons.nicolasmollet.com/markers/events/crime/pirates/?custom_color=383838
     'mall':         'mall.png',             // https://mapicons.mapsmarker.com/markers/stores/general-merchandise/shopping-mall/?custom_color=ff8c00
-    'mountains':    'mountains.png'         // https://mapicons.mapsmarker.com/markers/nature/natural-marvels/mountains/?custom_color=126b8c
+    'mountains':    'mountains.png',        // https://mapicons.mapsmarker.com/markers/nature/natural-marvels/mountains/?custom_color=126b8c
+    'campfire':     'campfire-2.png',       // https://mapicons.mapsmarker.com/markers/tourism/campfire/?custom_color=ff9100
+    'picnic':       'picnic-2.png',         // https://mapicons.mapsmarker.com/markers/tourism/picnic/?custom_color=7d5100
 };
 
 GP.iconPopups = {
