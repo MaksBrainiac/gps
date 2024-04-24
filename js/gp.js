@@ -1056,7 +1056,10 @@ GP.getGPSData = function(visibleOnly, selectedOnly){
         //tObj.transport = "car";
 
         for (let j = 0; j < toExport[i].trackPoints.length; j++)
-            tObj.points.push({x: toExport[i].trackPoints[j].lat(), y: toExport[i].trackPoints[j].lng()});
+            tObj.points.push({
+                x: toExport[i].trackPoints[j].lat().toFixed(5),
+                y: toExport[i].trackPoints[j].lng().toFixed(5)
+            });
 
         if (toExport[i].type === "ROUTE") {
             for (let j = 0; j < toExport[i].trackPoints.length - 1; j++)
@@ -1066,8 +1069,8 @@ GP.getGPSData = function(visibleOnly, selectedOnly){
                 if (segment) {
                     for (let k = 0; k < segment.length; k++) {
                         tObj.segments[j].push({
-                            x: segment[k].lat(),
-                            y: segment[k].lng()
+                            x: segment[k].lat().toFixed(5),
+                            y: segment[k].lng().toFixed(5)
                         });
                     }
                 } else {
@@ -1085,7 +1088,10 @@ GP.getGPSData = function(visibleOnly, selectedOnly){
             wObj.name = GP._gpPoints[i].name;
             wObj.description = GP._gpPoints[i].description;
             wObj.icon = GP._gpPoints[i].icon;
-            wObj.position = {x: GP._gpPoints[i].point.lat(), y: GP._gpPoints[i].point.lng()};
+            wObj.position = {
+                x: GP._gpPoints[i].point.lat().toFixed(5),
+                y: GP._gpPoints[i].point.lng().toFixed(5)
+            };
             waypoints.push(wObj);
         }
     }

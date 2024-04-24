@@ -365,7 +365,8 @@
                             <span id="actions">
                                 <button id="btnReverse" class="btn btn-xs btn-warning">Reverse</button>
                                 <button id="btnCopy"    class="btn btn-xs btn-warning">Copy</button>
-                                                                                                                            </span>
+                                                                <button id="btnChart"   class="btn btn-xs btn-inverse">Heights</button>
+                                                            </span>
                         </div>
                     </div>
 
@@ -2506,16 +2507,18 @@
         doFile: function (format) {
             $.blockUI({ message: null });
             let doc = format === 'GPXtg1' ? GP.getGPSData(true, true) : GP.getGPSData(true);
-            if (format === 'GPXtg1') {
-                format = 'GPXtg';
-            }
+            let name = ActiveDocument.fileName;
             if (!doc) {
                 $.unblockUI();
                 UI.showError("No data to export!");
                 return;
             }
 
-            EXT.save(doc, format, ActiveDocument.fileName);
+            if (format === 'GPXtg1') {
+                format = 'GPXtg';
+                name = doc.tracks[0].name;
+            }
+            EXT.save(doc, format, name);
             $.unblockUI();
         },
 
