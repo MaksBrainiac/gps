@@ -8,7 +8,7 @@
     <title>GPS Strava Flyby</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.css"/>
-    <link rel="stylesheet" href="css/main.css?v=1710083287">
+    <link rel="stylesheet" href="css/main.css?v=1679937555">
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-R8N4KV1R7C"></script>
@@ -47,7 +47,7 @@
             display: none;
         ">
             <div id="frame-timer" style="position: absolute; bottom: calc(100% + 1px);">0.00</div>
-            <div id="frame-now">12:00:00</div>
+            <div id="frame-now">12:00</div>
             <div id="frame-controls" style="position: absolute; left: 100%; top: 0">
                 <div><a href="#" id="rec-close">❌</a></div>
                 <div><a href="#" id="rec-start">▶️</a></div>
@@ -600,7 +600,7 @@
                 moment.unix(t).local().format('HH:mm')
             );
             $("#frame-now").html(
-                moment.unix(t).local().format('HH:mm:ss')
+                moment.unix(t).local().format('HH:mm')
             );
 
             $("#timer .total, #controls .total").html(
