@@ -712,25 +712,25 @@
             });
         },
 
-        pointerGo: function () {
-            let val = $('#pointer').val().trim();
-            val = val.replace('" E', '"E');
-            val = val.replace('" W', '"W');
-            val = val.replace('" N', '"N');
-            val = val.replace('" S', '"S');
+        // N50°09'11,91" E36°20'53,29"
+        // 50°2'15"N 36°37'17"E
+        // 50.08583° N, 36.25754° E
+
+        normalizeGPS: function (val) {
+            val = val.replace(' E', 'E');
+            val = val.replace(' W', 'W');
+            val = val.replace(' N', 'N');
+            val = val.replace(' S', 'S');
             val = val.replace(', ', ' ');
             val = val.replace('  ', ' ');
+            return val;
+        },
+
+        pointerGo: function () {
+            let val = UI.normalizeGPS($('#pointer').val().trim());
             let vals = val.split(" ");
             if (vals.length < 2)
                 vals = vals[0].split(",");
-
-            // N50°09'11,91" E36°20'53,29"
-            // 50°2'15"N 36°37'17"E
-            // 50.0506, 36.2480
-            // 50.0506,  36.2480
-            // 50.0506,36.2480
-            // console.log(val);
-            // console.log(vals);
 
             if (vals.length === 2) {
                 vals[0] = vals[0].trim();
@@ -989,10 +989,7 @@
             $('#point-gps').on('change', function () {
                 const point = GP.getActivePoint();
                 if (point) {
-                    let val = $(this).val();
-                    val = val.replace('"E', '" E');
-                    val = val.replace('"W', '" W');
-                    val = val.replace(', ', ' ');
+                    let val = UI.normalizeGPS($(this).val().trim());
                     let vals = val.split(" ");
                     if (vals.length < 2)
                         vals = vals[0].split(",");
@@ -1550,7 +1547,8 @@
             const center = GP._map.getCenter();
             $('#wiki').show();
             $('#wiki').attr("href", "http://wikimapia.org/#lat=" + center.lat() + "&lon=" + center.lng() + "&z=" + GP._map.getZoom());
-            $('#pos_xy').text('(' + Geo.toLat(point.lat(), "d", 4) + ' ' + Geo.toLon(point.lng(), "d", 4) + ')');
+            //$('#pos_xy').text('(' + Geo.toLat(point.lat(), "d", 4) + ' ' + Geo.toLon(point.lng(), "d", 4) + ')');
+            $('#pos_xy').text('(' + point.lat().toFixed(6) + ', ' + point.lng().toFixed(6) + ')');
             $('#pos_ll').text(Geo.toLat(point.lat()) + ' ' + Geo.toLon(point.lng()));
         },
 
@@ -1660,9 +1658,10 @@
                 if ($('#p-format').data('type') === 'dms') {
                     $('#point-gps').val(Geo.toLat(waypoint.point.lat()) + " " + Geo.toLon(waypoint.point.lng()));
                 } else {
-                    const aX = waypoint.point.lat() > 0 ? 'N' : 'S';
-                    const aY = waypoint.point.lng() > 0 ? 'E' : 'W';
-                    $('#point-gps').val(aX + Math.abs(waypoint.point.lat()).toFixed(4) + " " + aY + Math.abs(waypoint.point.lng()).toFixed(4));
+                    // const aX = waypoint.point.lat() > 0 ? 'N' : 'S';
+                    // const aY = waypoint.point.lng() > 0 ? 'E' : 'W';
+                    // $('#point-gps').val(aX + Math.abs(waypoint.point.lat()).toFixed(4) + " " + aY + Math.abs(waypoint.point.lng()).toFixed(4));
+                    $('#point-gps').val(waypoint.point.lat().toFixed(6) + ", " + waypoint.point.lng().toFixed(6));
                 }
             }
         },
@@ -1680,9 +1679,10 @@
                 if ($('#p-format').data('type') === 'dms') {
                     $('#point-gps').val(Geo.toLat(waypoint.point.lat()) + " " + Geo.toLon(waypoint.point.lng()));
                 } else {
-                    const aX = waypoint.point.lat() > 0 ? 'N' : 'S';
-                    const aY = waypoint.point.lng() > 0 ? 'E' : 'W';
-                    $('#point-gps').val(aX + Math.abs(waypoint.point.lat()).toFixed(4) + " " + aY + Math.abs(waypoint.point.lng()).toFixed(4));
+                    // const aX = waypoint.point.lat() > 0 ? 'N' : 'S';
+                    // const aY = waypoint.point.lng() > 0 ? 'E' : 'W';
+                    // $('#point-gps').val(aX + Math.abs(waypoint.point.lat()).toFixed(4) + " " + aY + Math.abs(waypoint.point.lng()).toFixed(4));
+                    $('#point-gps').val(waypoint.point.lat().toFixed(6) + ", " + waypoint.point.lng().toFixed(6));
                 }
             } else {
                 $('.hide-no-point').hide();
