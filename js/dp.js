@@ -6,26 +6,55 @@ var simplifyPath = function( points, tolerance ) {
         this.y = y;
 
     };
-    var Line = function( p1, p2 ) {
+    // var Line = function( p1, p2 ) {
+    //     this.p1 = p1;
+    //     this.p2 = p2;
+    //
+    //     this.distanceToPoint = function( point ) {
+    //         // slope
+    //         var m = ( this.p2.y - this.p1.y ) / ( this.p2.x - this.p1.x ),
+    //         // y offset
+    //             b = this.p1.y - ( m * this.p1.x ),
+    //             d = [];
+    //         // distance to the linear equation
+    //         d.push( Math.abs( point.y - ( m * point.x ) - b ) / Math.sqrt( Math.pow( m, 2 ) + 1 ) );
+    //         // distance to p1
+    //         d.push( Math.sqrt( Math.pow( ( point.x - this.p1.x ), 2 ) + Math.pow( ( point.y - this.p1.y ), 2 ) ) );
+    //         // distance to p2
+    //         d.push( Math.sqrt( Math.pow( ( point.x - this.p2.x ), 2 ) + Math.pow( ( point.y - this.p2.y ), 2 ) ) );
+    //         // return the smallest distance
+    //         return d.sort( function( a, b ) {
+    //             return ( a - b ); //causes an array to be sorted numerically and ascending
+    //         } )[0];
+    //     };
+    // };
+
+    var Line = function(p1, p2) {
         this.p1 = p1;
         this.p2 = p2;
 
-        this.distanceToPoint = function( point ) {
+        this.distanceToPoint = function(point) {
+            // Handle vertical line case to avoid division by zero
+            if (this.p2.x === this.p1.x) {
+                return Math.abs(point.x - this.p1.x);
+            }
+
             // slope
-            var m = ( this.p2.y - this.p1.y ) / ( this.p2.x - this.p1.x ),
+            var m = (this.p2.y - this.p1.y) / (this.p2.x - this.p1.x);
             // y offset
-                b = this.p1.y - ( m * this.p1.x ),
-                d = [];
+            var b = this.p1.y - (m * this.p1.x);
+
             // distance to the linear equation
-            d.push( Math.abs( point.y - ( m * point.x ) - b ) / Math.sqrt( Math.pow( m, 2 ) + 1 ) );
+            var distanceToLine = Math.abs(point.y - (m * point.x + b)) / Math.sqrt(Math.pow(m, 2) + 1);
+
             // distance to p1
-            d.push( Math.sqrt( Math.pow( ( point.x - this.p1.x ), 2 ) + Math.pow( ( point.y - this.p1.y ), 2 ) ) );
+            var distanceToP1 = Math.sqrt(Math.pow(point.x - this.p1.x, 2) + Math.pow(point.y - this.p1.y, 2));
+
             // distance to p2
-            d.push( Math.sqrt( Math.pow( ( point.x - this.p2.x ), 2 ) + Math.pow( ( point.y - this.p2.y ), 2 ) ) );
+            var distanceToP2 = Math.sqrt(Math.pow(point.x - this.p2.x, 2) + Math.pow(point.y - this.p2.y, 2));
+
             // return the smallest distance
-            return d.sort( function( a, b ) {
-                return ( a - b ); //causes an array to be sorted numerically and ascending
-            } )[0];
+            return Math.min(distanceToLine, distanceToP1, distanceToP2);
         };
     };
 

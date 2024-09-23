@@ -1681,6 +1681,7 @@
                     // $('#point-gps').val(aX + Math.abs(waypoint.point.lat()).toFixed(4) + " " + aY + Math.abs(waypoint.point.lng()).toFixed(4));
                     $('#point-gps').val(waypoint.point.lat().toFixed(6) + ", " + waypoint.point.lng().toFixed(6));
                 }
+                GP.navigateMapToPoint(waypoint.id);
             } else {
                 $('.hide-no-point').hide();
                 $('#icons .icon').removeClass('active');
@@ -2759,7 +2760,7 @@
                 let segmentList = null;
                 if (doc.tracks[i].segments) {
                     segmentList = [];
-                    for (j = 0; j < doc.tracks[i].segments.length; j++) {
+                    for (let j = 0; j < doc.tracks[i].segments.length; j++) {
                         if (doc.tracks[i].segments[j]) {
                             segmentList[j] = [];
                             for (let k = 0; k < doc.tracks[i].segments[j].length; k++) {
