@@ -879,6 +879,7 @@
             $('#points').on('click', 'a.link', function ($event) {
                 const activeId = ($(this).closest('.point').data('foo'));
                 GP.setActivePoint(activeId);
+                GP.navigateMapToPoint(activeId);
                 return false;
             });
             $('#points').on('click', 'a.del', function ($event) {
@@ -1681,7 +1682,6 @@
                     // $('#point-gps').val(aX + Math.abs(waypoint.point.lat()).toFixed(4) + " " + aY + Math.abs(waypoint.point.lng()).toFixed(4));
                     $('#point-gps').val(waypoint.point.lat().toFixed(6) + ", " + waypoint.point.lng().toFixed(6));
                 }
-                GP.navigateMapToPoint(waypoint.id);
             } else {
                 $('.hide-no-point').hide();
                 $('#icons .icon').removeClass('active');
