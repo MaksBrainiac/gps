@@ -409,6 +409,7 @@ GP.defaultPosition = function(){
 };
 
 GP.geoNavError = function(err){
+    clearTimeout(GP.navTiid);
     console.error("GP.geoNavError", err);
     GP.defaultPosition();
 };
@@ -419,6 +420,7 @@ GP.geoNavCancel = function(){
 };
 
 GP.geoNavComplete = function(location){
+    clearTimeout(GP.navTiid);
     GP.navComplete = true;
     GP.setStartPoint(location.coords.latitude, location.coords.longitude);
     if (!GP._map)

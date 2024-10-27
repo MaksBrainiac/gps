@@ -4,15 +4,7 @@
     <meta charset="UTF-8">
     <title>GPS Travel Maker</title>
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R8N4KV1R7C"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-R8N4KV1R7C');
-    </script>
-
+    
     <!-- Libs -->
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script type="text/javascript" src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
@@ -673,7 +665,7 @@
                 const url = $('#import-url').val();
                 if (url === "")
                     return;
-                RService.doImport(url, true);
+                RService.doImport(url, false);
             });
 
             $('.position .part').click(function ($event) {
@@ -2817,7 +2809,8 @@
             //     RService.filesToProcess.push(fileList[i]);
 
             // UI.doAskClear('Replace all content?<br/>This cannot be undone', 'New File Uploaded!', RService.processNextFile);
-            UI.doAskClear('Replace all content?<br/>This cannot be undone', 'New File Uploaded!', () => RService.processFileListAsync(fileList));
+            // UI.doAskClear('Replace all content?<br/>This cannot be undone', 'New File Uploaded!', () => RService.processFileListAsync(fileList));
+            RService.processFileListAsync(fileList)
         },
 
         // currentFile: null,
