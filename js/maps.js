@@ -41,13 +41,13 @@ Maps.addSupport = function(map){
     Maps.overlayStravaR = new google.maps.ImageMapType({
         getTileUrl: function(coord, zoom) {
             //return 'proxy.php?url=' + btoa("https://heatmap-external-a.strava.com/tiles-auth/ride/hot/" + zoom + "/" + coord.x + "/" + coord.y + ".png?px=256");
-            return "https://proxy.nakarte.me/https/heatmap-external-a.strava.com/tiles-auth/ride/hot/" + zoom + "/" + coord.x + "/" + coord.y + ".png?px=256";
+            return "https://proxy.nakarte.me/https/content-a.strava.com/identified/globalheat/all/hot/" + zoom + "/" + coord.x + "/" + coord.y + ".png?px=256";
         },
         tileSize: new google.maps.Size(256, 256),
         name: "© Strava",
         maxZoom: 16
     });
-    
+
     Maps.overlayDigitalGlobe = new google.maps.ImageMapType({
         getTileUrl: function(coord, zoom) {
             return "http://api.tiles.mapbox.com/v4/digitalglobe.nal0mpda/" + zoom + "/" + coord.x + "/" + coord.y + ".png?access_token=pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImNpcGg5dHkzYTAxM290bG1kemJraHU5bmoifQ.CHhq1DFgZPSQQC-DYWpzaQ";
