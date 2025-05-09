@@ -305,7 +305,9 @@
                                         <button id="mapBing"    data-mode="Bing"    class="btn btn-xs btn-default btn-sat">Bing</button>
                     <button id="mapESRI"    data-mode="ESRI"    class="btn btn-xs btn-default btn-sat" style="margin-right: 10px">ESRI</button>
 
-                                        &nbsp;&nbsp;<b>Overlay</b> <button id="overlayStravaR" data-overlay="StravaR" class="btn btn-xs btn-default btn-heat">Strava Heatmap</button>
+                                        &nbsp;&nbsp;<b>Overlay</b> <button id="overlayStravaR" data-overlay="StravaR" class="btn btn-xs btn-default btn-heat" style="display: none">Strava Heatmap</button>
+                    <button id="actionStravaR" class="btn btn-xs btn-warning" style="display: none" title="Get Strava cookies...">Strava Heatmap ???</button>
+                    <button id="errorStravaR" class="btn btn-xs btn-danger" style="display: none" title="Cache server is offline...">Strava Heatmap !!!</button>
                 </div>
             </div>
 
@@ -609,6 +611,37 @@
 
                 $('.colors .color').removeClass('active');
                 $('#color' + $(this).data('value').replace('#','')).addClass('active');
+            });
+
+            window.addEventListener("message", function (event) {
+                console.log(event);
+                switch (event.data.event) {
+                    case "capture":
+                        UI.winFrame.close();
+                        UI.winFrame = null;
+                        // send cookies to http://localhost:5555/
+
+                        const formData = new FormData();
+                        formData.append('auth', event.data.auth);
+
+                        fetch('http://localhost:5555/auth', {
+                            method: 'POST',
+                            body: formData
+                        })
+                            .then(response => {
+                                UI.initStrava("StravaR");
+                            })
+                            .catch(error => {
+                                console.error('Fetch failed:', error);
+                            });
+                        break;
+                }
+            });
+
+            $('#actionStravaR').on('click', function (){
+                // Open special window and wait for message event
+                // https://content-a.strava.com/
+                UI.winFrame = window.open("https://content-a.strava.com/?capture=1");
             });
 
             for (let i = 0; i < TRACK_OPACITY.length; i++) {
@@ -2271,8 +2304,68 @@
 
             const ot = localStorage.getItem("activeOverlayType");
             console.log("OVERLAY", ot);
-            if (ot)
-                UI.activateOverlay(ot);
+
+            UI.initStrava(ot);
+            if (ot !== 'StravaR') {
+                 UI.activateOverlay(ot);
+            }
+
+            ///
+            ///
+            //
+            // UI.activateOverlay('StravaR');
+        },
+
+        initStrava: function (ot) {
+            $('#errorStravaR').hide();
+            $('#actionStravaR').hide();
+            UI.checkForStrava(function (code) {
+                if (code == 200) {
+                    $('#overlayStravaR').show();
+                    if (ot === "StravaR") {
+                        UI.activateOverlay(ot);
+                    }
+                } else if (code == 0) {
+                    $('#errorStravaR').show();
+                } else if (code == 403) {
+                    $('#actionStravaR').show();
+                }
+            });
+        },
+
+        checkForStrava: function (_call) {
+            fetch('http://localhost:5555/test')
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('HTTP Error:', response.status);
+                        _call(response.status);
+                    } else {
+                        _call(200);
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch failed:', error);
+                    _call(0);
+                });
+
+
+            // // Create a new image element
+            // const img = new Image();
+            //
+            // // Set the onload handler
+            // img.onload = function () {
+            //     console.log("Image loaded successfully!");
+            //     // document.body.appendChild(img); // Append image to body once it's loaded
+            //     _call(200);
+            // };
+            //
+            // // Set the onerror handler (optional)
+            // img.onerror = function () {
+            //     console.error("Failed to load image.");
+            // };
+            //
+            // // Set the source (this triggers loading)
+            // img.src = "http://localhost:5555/test.png";
         },
 
         newDocument: function () {
