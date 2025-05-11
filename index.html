@@ -189,7 +189,7 @@
         <div class="container-fluid">
             <!-- Brand and toggle get grouped for better mobile display -->
             <div class="navbar-header">
-                <a class="navbar-brand" href="/">GPS Travel Maker</a>
+                <a class="navbar-brand" href="asdasd/">GPS Travel Maker</a>
             </div>
 
             <!-- Collect the nav links, forms, and other content for toggling -->
@@ -613,35 +613,36 @@
                 $('#color' + $(this).data('value').replace('#','')).addClass('active');
             });
 
-            window.addEventListener("message", function (event) {
-                console.log(event);
-                switch (event.data.event) {
-                    case "capture":
-                        UI.winFrame.close();
-                        UI.winFrame = null;
-                        // send cookies to http://localhost:5555/
-
-                        const formData = new FormData();
-                        formData.append('auth', event.data.auth);
-
-                        fetch('http://localhost:5555/auth', {
-                            method: 'POST',
-                            body: formData
-                        })
-                            .then(response => {
-                                UI.initStrava("StravaR");
-                            })
-                            .catch(error => {
-                                console.error('Fetch failed:', error);
-                            });
-                        break;
-                }
-            });
+            // window.addEventListener("message", function (event) {
+            //     console.log(event);
+            //     switch (event.data.event) {
+            //         case "capture":
+            //             UI.winFrame.close();
+            //             UI.winFrame = null;
+            //             // send cookies to http://localhost:5555/
+            //
+            //             const formData = new FormData();
+            //             formData.append('auth', event.data.auth);
+            //
+            //             fetch('http://localhost:5555/auth', {
+            //                 method: 'POST',
+            //                 body: formData
+            //             })
+            //                 .then(response => {
+            //                     UI.initStrava("StravaR");
+            //                 })
+            //                 .catch(error => {
+            //                     console.error('Fetch failed:', error);
+            //                 });
+            //             break;
+            //     }
+            // });
 
             $('#actionStravaR').on('click', function (){
                 // Open special window and wait for message event
                 // https://content-a.strava.com/
                 UI.winFrame = window.open("https://content-a.strava.com/?capture=1");
+                setTimeout(UI.intervalFuncForStrava, 1000);
             });
 
             for (let i = 0; i < TRACK_OPACITY.length; i++) {
@@ -2316,6 +2317,15 @@
             // UI.activateOverlay('StravaR');
         },
 
+        intervalFuncForStrava: function() {
+            if (UI.winFrame.closed) {
+                UI.winFrame = null;
+                UI.initStrava('StravaR');
+            } else {
+                setTimeout(UI.intervalFuncForStrava, 1000);
+            }
+        },
+
         initStrava: function (ot) {
             $('#errorStravaR').hide();
             $('#actionStravaR').hide();
@@ -2334,7 +2344,9 @@
         },
 
         checkForStrava: function (_call) {
-            fetch('http://localhost:5555/test')
+            fetch('http://localhost:5555/test', {
+                method: 'POST'
+            })
                 .then(response => {
                     if (!response.ok) {
                         console.error('HTTP Error:', response.status);
@@ -3246,6 +3258,8 @@
         $(window).focus(function () {
             document.title = "GPS Travel Maker";
         });
+
+        $('.navbar-brand').attr('href', base + '/');
 
         const _debug = +localStorage.getItem("debug");
         if (_debug)
