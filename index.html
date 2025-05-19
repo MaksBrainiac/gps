@@ -613,35 +613,36 @@
                 $('#color' + $(this).data('value').replace('#','')).addClass('active');
             });
 
-            // window.addEventListener("message", function (event) {
-            //     console.log(event);
-            //     switch (event.data.event) {
-            //         case "capture":
-            //             UI.winFrame.close();
-            //             UI.winFrame = null;
-            //             // send cookies to http://localhost:5555/
-            //
-            //             const formData = new FormData();
-            //             formData.append('auth', event.data.auth);
-            //
-            //             fetch('http://localhost:5555/auth', {
-            //                 method: 'POST',
-            //                 body: formData
-            //             })
-            //                 .then(response => {
-            //                     UI.initStrava("StravaR");
-            //                 })
-            //                 .catch(error => {
-            //                     console.error('Fetch failed:', error);
-            //                 });
-            //             break;
-            //     }
-            // });
+            window.addEventListener("message", function (event) {
+                console.log(event);
+                switch (event.data.event) {
+                    case "capture":
+                        UI.winFrame.close();
+                        UI.winFrame = null;
+                        // send cookies to http://localhost:5555/
+
+                        console.log("AUTH!!!", event.data.auth);
+                        const formData = new FormData();
+                        formData.append('auth', JSON.stringify(event.data.auth));
+
+                        fetch('http://localhost:5555/auth', {
+                            method: 'POST',
+                            body: formData
+                        })
+                            .then(response => {
+                                UI.initStrava("StravaR");
+                            })
+                            .catch(error => {
+                                console.error('Fetch failed:', error);
+                            });
+                        break;
+                }
+            });
 
             $('#actionStravaR').on('click', function (){
                 // Open special window and wait for message event
                 // https://content-a.strava.com/
-                UI.winFrame = window.open("https://content-a.strava.com/?capture=1");
+                UI.winFrame = window.open("https://www.strava.com/maps/global-heatmap?sport=RideLike&style=standard&terrain=false&labels=true&poi=true&cPhotos=true&gColor=hot&gOpacity=100#11/49.9875/36.0962");
                 setTimeout(UI.intervalFuncForStrava, 1000);
             });
 
@@ -2318,7 +2319,7 @@
         },
 
         intervalFuncForStrava: function() {
-            if (UI.winFrame.closed) {
+            if (UI.winFrame && UI.winFrame.closed) {
                 UI.winFrame = null;
                 UI.initStrava('StravaR');
             } else {
