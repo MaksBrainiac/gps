@@ -622,12 +622,15 @@
                         // send cookies to http://localhost:5555/
 
                         console.log("AUTH!!!", event.data.auth);
-                        const formData = new FormData();
-                        formData.append('auth', JSON.stringify(event.data.auth));
+                        const data = new URLSearchParams();
+                        data.append('auth', JSON.stringify(event.data.auth));
 
                         fetch('http://localhost:5555/auth', {
                             method: 'POST',
-                            body: formData
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: data.toString()
                         })
                             .then(response => {
                                 UI.initStrava("StravaR");
