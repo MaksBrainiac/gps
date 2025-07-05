@@ -642,7 +642,11 @@
                 }
             });
 
-            $('#actionStravaR, #errorStravaR').on('click', function (){
+            $('#errorStravaR').on('click', function (){
+                UI.initStrava('StravaR');
+            });
+
+            $('#actionStravaR').on('click', function (){
                 // Open special window and wait for message event
                 // https://content-a.strava.com/
                 UI.winFrame = window.open("https://www.strava.com/maps/global-heatmap?sport=RideLike&style=standard&terrain=false&labels=true&poi=true&cPhotos=true&gColor=hot&gOpacity=100#11/49.9875/36.0962");
